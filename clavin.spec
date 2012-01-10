@@ -1,4 +1,3 @@
-Access to this system is for AUTHORIZED USERS only!
 Summary: Clavin
 Name: iplant-clavin
 Version: 0.1.0
