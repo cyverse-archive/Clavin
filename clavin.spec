@@ -24,6 +24,7 @@ mkdir -p $RPM_BUILD_ROOT/usr/local/bin
 mkdir -p $RPM_BUILD_ROOT/usr/local/lib/clavin
 
 %build
+unset JAVA_OPTS
 lein deps
 lein compile
 lein uberjar
