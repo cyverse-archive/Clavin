@@ -4,6 +4,7 @@ Name: iplant-clavin
 Version: 0.1.0
 Release: 1
 Epoch: 0
+BuildArchitectures: noarch
 Group: Applications
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 License: BSD
@@ -41,3 +42,4 @@ rm -r lib/*
 %defattr(0764,iplant,iplant)
 %attr(0775, iplant,iplant) /usr/local/bin/clavin
 %attr(0644, iplant,iplant) /usr/local/lib/clavin/clavin-1.0.0-SNAPSHOT-standalone.jar
+
