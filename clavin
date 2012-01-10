@@ -1,0 +1,4 @@
+#!/bin/bash
+
+java -jar /usr/local/lib/clavin/clavin-1.0.0-SNAPSHOT-standalone.jar $@
+
