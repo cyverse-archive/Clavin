@@ -6,7 +6,7 @@
             [clojure.string :as string]))
 
 (def prop-hosts
-  #(string/split (get %1 %2) #","))
+  #(into [] (map string/trim (string/split (get %1 %2) #","))))
 
 (defn- set-of-hosts
   [acl-props]
@@ -87,21 +87,29 @@
               (zk/add-acl dep-path host-acls))))))))
 
 (defn load-acls
-  [env dpmt acl-props]
-  (let [full-env        (if (not= env "admin") (str env "." dpmt) env)
+  [app env dpmt acl-props]
+  (let [full-env        (if (not= env "admin") (str app "." env "." dpmt) env)
         env-hosts       (prop-hosts acl-props full-env)
         admin-hosts     (prop-hosts acl-props "admin")
         env-host-acls   (map zk/env-host-acl env-hosts)
         admin-host-acls (map zk/admin-host-acl admin-hosts)]
-    ;;(load-hosts acl-props admin-host-acls)
     (concat env-host-acls admin-host-acls)))
 
 (defn load-service
-  [env dpmt svc svc-settings acls]
+  [app env dpmt svc svc-settings acls]
   (zk/with-zk
-    (let [env-path  (ft/path-join "/" env)
+    (let [app-path  (ft/path-join "/" app)
+          env-path  (ft/path-join app-path env)
           dpmt-path (ft/path-join env-path dpmt)
           svc-path  (ft/path-join dpmt-path svc)]
+      ;;Create the app path and set its ACLs.
+      (when (not (zk/exists? app-path))
+        (println (str "Creating " app-path))
+        (zk/create app-path))
+      
+      (println (str "Setting ACLs for " app-path))
+      (zk/create app-path)
+      
       ;;Create the environment path and set its ACLs.
       (when (not (zk/exists? env-path))
         (println (str "Creating " env-path))
@@ -144,12 +152,10 @@
           (zk/set-value node-path node-data))))))
 
 (defn load-settings
-  [env dpmt filepath acls]
+  [app env dpmt filepath acls]
   (let [svc-settings (props/parse-files filepath)
         all-svcs     (keys svc-settings)
         rooted-join  (partial ft/path-join "/")]
-    (loop [svcs all-svcs]
-      (if-let [svc (first svcs)]
-        (load-service env dpmt svc (get svc-settings svc) acls))
-      (if (> (count (rest svcs)) 0)
-        (recur (rest svcs))))))
+    (doseq [svc all-svcs]
+      (load-service app env dpmt svc (get svc-settings svc) acls))))
+

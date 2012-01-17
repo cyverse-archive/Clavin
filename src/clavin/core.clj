@@ -17,6 +17,7 @@
     ["--host" "The Zookeeper host to connection to." :default nil]
     ["--port" "The Zookeeper client port to connection to." :default 2181 :parse-fn #(Integer. %)]
     ["--acl"  "The file containing Zookeeper hostname ACLs." :default nil]
+    ["-a" "--app" "The application the settings are for." :default nil]
     ["-e" "--env" "The environment that the options should be entered into." :default nil]
     ["-d" "--deployment" "The deployment inside the environment that is being configured." :default nil]))
 
@@ -69,7 +70,7 @@
       (println "Done loading hosts.")
       (System/exit 0))))
 
-(defn handle-acls
+(defn handle-properties
   [args-vec]
   (let [[opts args help-str] (parse-args args-vec)]
     (when (:help opts)
@@ -107,6 +108,11 @@
         (println help-str)
         (System/exit 1))
       
+      (not (:app opts))
+      (do (println "--app is required.")
+        (println help-str)
+        (System/exit 1))
+      
       (not (ft/exists? (:acl opts)))
       (do (println "--acl must reference an existing file.")
         (println help-str)
@@ -116,9 +122,9 @@
     (zk/init (:host opts) (:port opts))
     
     (let [fpath     (if (:dir opts) (:dir opts) (:file opts))
+          app       (string/trim (:app opts))
           env       (string/trim (:env opts))
           dep       (string/trim (:deployment opts))
-          env-dep   (str env "." dep)
           acl-props (ccprops/read-properties (:acl opts))]
       
       (when (not (loader/can-run? acl-props))
@@ -133,19 +139,19 @@
         (println "This machine is connecting to a local Zookeeper instance, but 127.0.0.1 isn't in the admin machines list.")
         (System/exit 1))
       
-      (println (str "Starting to load data into the " env " environment..."))
+      (println (str "Starting to load data into the " (str app "." env) " environment..."))
       
-      (let [acls (loader/load-acls env dep acl-props)]
-        (loader/load-settings env dep fpath acls))
+      (let [acls (loader/load-acls app env dep acl-props)]
+        (loader/load-settings app env dep fpath acls))
       
-      (println (str "Done loading data into the " env " environment."))
+      (println (str "Done loading data into the " (str app "." env) " environment."))
       (System/exit 0))))
 
 (defn -main
   [& args-vec]
   (let [cmd        (first args-vec)
-        known-cmds ["acls" "hosts" "help"]
-        help-str   "clavin acls|hosts|help [options]\nEach command has its own --help."]
+        known-cmds ["props" "hosts" "help"]
+        help-str   "clavin props|hosts|help [options]\nEach command has its own --help."]
     
     (cond
       (not (contains? (set known-cmds) cmd))
@@ -157,8 +163,8 @@
       (do (println help-str)
         (System/exit 0))
       
-      (= cmd "acls")
-      (handle-acls (into [] (drop 1 args-vec)))
+      (= cmd "props")
+      (handle-properties (into [] (drop 1 args-vec)))
       
       (= cmd "hosts")
       (handle-hosts (into [] (drop 1 args-vec)))
