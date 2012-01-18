@@ -16,6 +16,6 @@
 (defn parse-files
   [fpath]
   (apply merge (for [pfile (prop-files fpath)] 
-                 {(ft/replace-re #"\.properties$" "" (ft/basename pfile))
+                 {(.replaceAll (re-matcher #"\.properties$" (ft/basename pfile)) "")
                   (read-properties pfile)})))
 
