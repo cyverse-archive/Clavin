@@ -52,12 +52,9 @@
         hosts-root  "/hosts"
         all-hosts   (keys hms)]
     (zk/with-zk
-      (when (zk/exists? hosts-root) 
-        (println (str "Deleting " hosts-root))
-        (zk/delete-all hosts-root))
-      
-      (println (str "Creating " hosts-root))
-      (zk/create hosts-root)
+      (when (not (zk/exists? hosts-root))
+        (println (str "Creating " hosts-root))
+        (zk/create hosts-root)) 
       
       (println (str "Setting ACLs for " hosts-root))
       (zk/set-acl hosts-root admin-acls)
@@ -68,9 +65,14 @@
           ;;Let the host read and write to /hosts  
           (zk/add-acl hosts-root host-acls)
           
-          (when (not (zk/exists? host-path))
-            (println (str "Creating " host-path))
-            (zk/create host-path))
+          ;Nuke old settings
+          (when (zk/exists? host-path)
+            (println (str "Deleting " host-path))
+            (zk/delete-all host-path))
+          
+          ;Recreate host node.
+          (println (str "Creating " host-path))
+          (zk/create host-path)
           
           (println (str "Setting ACLs for " host-path))
           (zk/set-acl host-path admin-acls)
