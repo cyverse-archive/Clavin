@@ -61,10 +61,6 @@
         (println "This machine isn't listed as an admin machine in " (:acl opts))
         (System/exit 1))
       
-      (when (not (loader/is-localhost-and-admin? (:host opts) acl-props))
-        (println "This machine is connecting to a local Zookeeper instance, but 127.0.0.1 isn't in the admin machines list.")
-        (System/exit 1))
-      
       (println "Starting to load hosts.")
       (loader/load-hosts acl-props)
       (println "Done loading hosts.")
