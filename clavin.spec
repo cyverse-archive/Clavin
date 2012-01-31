@@ -1,7 +1,7 @@
 Summary: Clavin
 Name: iplant-clavin
 Version: 0.1.0
-Release: 1
+Release: 2
 Epoch: 0
 BuildArchitectures: noarch
 Group: Applications
