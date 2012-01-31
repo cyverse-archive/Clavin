@@ -127,14 +127,6 @@
         (println "This machine isn't listed as an admin machine in " (:acl opts))
         (System/exit 1))
       
-      ;;This is weird. If you're connected to a Zookeeper instance that's running locally,
-      ;;you need to have 127.0.0.1 listed in the admin list even if you're explicitly
-      ;;connecting via an externally facing IP. Weird, weird, weird. Seems to be something
-      ;;internal to Zookeeper that causes it.
-      (when (not (loader/is-localhost-and-admin? (:host opts) acl-props))
-        (println "This machine is connecting to a local Zookeeper instance, but 127.0.0.1 isn't in the admin machines list.")
-        (System/exit 1))
-      
       (println (str "Starting to load data into the " (str app "." env) " environment..."))
       
       (let [acls (loader/load-acls app env dep acl-props)]
