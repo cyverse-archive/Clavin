@@ -1,3 +1,9 @@
+%define __jar_repack %{nil}
+%define debug_package %{nil}
+%define __strip /bin/true
+%define __os_install_post   /bin/true
+%define __check_files /bin/true
+
 Summary: Clavin
 Name: iplant-clavin
 Version: 0.1.0
