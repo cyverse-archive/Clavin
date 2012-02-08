@@ -43,6 +43,7 @@ install -m644 clavin-1.0.0-SNAPSHOT-standalone.jar $RPM_BUILD_ROOT/usr/local/lib
 %clean
 lein clean
 rm -r lib/*
+rm -r $RPM_BUILD_ROOT
 
 %files
 %defattr(0764,iplant,iplant)
