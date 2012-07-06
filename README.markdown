@@ -173,3 +173,50 @@ clavin props --host 127.0.0.1 --acl <path-to-acls> --dir <path-to-prop-dir> -a <
 ```
 
 All of the files in <path-to-prop-dir> will be processed and loaded into Zookeeper.
+
+
+Clavin command-line
+-------------------
+
+Running 'clavin' without any arguments on the command-line will list out the supported sub-tasks:
+
+```
+[wregglej@example ~]$ clavin help
+clavin props|hosts|help [options]
+Each command has its own --help.
+```
+
+Currently, the two supported sub-tasks are 'props', which allows you to load in either a directory or a single file full of configuration options, and 'hosts', which loads the layouts of the different environments.
+
+Here's the --help of the 'props' sub-task:
+
+```
+[wregglej@example ~]$ clavin props --help
+Usage:
+
+ Switches               Default  Desc                                                            
+ --------               -------  ----                                                            
+ -h, --no-help, --help  false    Show help.                                                      
+ --dir                           Read all of the configs from this directory.                    
+ --file                          Read in a specific file.                                        
+ --host                          The Zookeeper host to connection to.                            
+ --port                 2181     The Zookeeper client port to connection to.                     
+ --acl                           The file containing Zookeeper hostname ACLs.                    
+ -a, --app                       The application the settings are for.                           
+ -e, --env                       The environment that the options should be entered into.        
+ -d, --deployment                The deployment inside the environment that is being configured. 
+```
+
+Here's the --help of the 'hosts' sub-task:
+
+```
+[wregglej@example ~]$ clavin hosts --help
+Usage:
+
+ Switches               Default  Desc                                         
+ --------               -------  ----                                         
+ -h, --no-help, --help  false    Shop help.                                   
+ --acl                           The file containing Zookeeper hostname ACLs. 
+ --host                          The Zookeeper host to connection to.         
+ --port                 2181     The Zookeeper client port to connection to.  
+```
