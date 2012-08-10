@@ -7,6 +7,10 @@
             [clojure.string :as string]
             [clojure-commons.props :as ccprops]))
 
+(defn- to-integer
+  [v]
+  (Integer. v))
+
 (defn parse-args
   [args]
   (cli/cli 
@@ -15,7 +19,7 @@
     ["--dir" "Read all of the configs from this directory." :default nil]
     ["--file" "Read in a specific file." :default nil]
     ["--host" "The Zookeeper host to connection to." :default nil]
-    ["--port" "The Zookeeper client port to connection to." :default 2181 :parse-fn #(Integer. %)]
+    ["--port" "The Zookeeper client port to connection to." :default 2181 :parse-fn to-integer]
     ["--acl"  "The file containing Zookeeper hostname ACLs." :default nil]
     ["-a" "--app" "The application the settings are for." :default nil]
     ["-e" "--env" "The environment that the options should be entered into." :default nil]
@@ -28,7 +32,7 @@
     ["-h" "--help" "Shop help." :default false :flag true]
     ["--acl"  "The file containing Zookeeper hostname ACLs." :default nil]
     ["--host" "The Zookeeper host to connection to." :default nil]
-    ["--port" "The Zookeeper client port to connection to." :default 2181 :parse-fn #(Integer. %)]))
+    ["--port" "The Zookeeper client port to connection to." :default 2181 :parse-fn to-integer]))
 
 (defn handle-hosts
   [args-vec]
@@ -57,7 +61,7 @@
     (zk/init (:host opts) (:port opts))
     
     (let [acl-props (ccprops/read-properties (:acl opts))]
-      (when (not (loader/can-run? acl-props))
+      (when-not (loader/can-run? acl-props)
         (println "This machine isn't listed as an admin machine in " (:acl opts))
         (System/exit 1))
       
@@ -123,7 +127,7 @@
           dep       (string/trim (:deployment opts))
           acl-props (ccprops/read-properties (:acl opts))]
       
-      (when (not (loader/can-run? acl-props))
+      (when-not (loader/can-run? acl-props)
         (println "This machine isn't listed as an admin machine in " (:acl opts))
         (System/exit 1))
       
@@ -152,10 +156,10 @@
         (System/exit 0))
       
       (= cmd "props")
-      (handle-properties (into [] (drop 1 args-vec)))
+      (handle-properties (vec (drop 1 args-vec)))
       
       (= cmd "hosts")
-      (handle-hosts (into [] (drop 1 args-vec)))
+      (handle-hosts (vec (drop 1 args-vec)))
       
       :else
       (do (println "Something weird happened.")

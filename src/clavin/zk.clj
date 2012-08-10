@@ -26,10 +26,9 @@
   [^String npath]
   (let [npaths (string/split npath #"\/")
         all-nodes npaths]
-    (into 
-      [] 
-      (for [idx (range 2 (+ (count all-nodes) 1))]
-        (apply ft/path-join (take idx all-nodes))))))
+    (vec
+     (for [idx (range 2 (inc (count all-nodes)))]
+       (apply ft/path-join (take idx all-nodes))))))
 
 (defn mk-node
   "Creates all nodes in npath. Must be called within a with-zk block."
@@ -50,7 +49,7 @@
 (defn read-node
   "Reads the bytes from a node and returns them as a string."
   [npath]
-  (-> (zk/data zkcl npath) data/to-string))
+  (data/to-string (zk/data zkcl npath)))
 
 (defn rm-node
   "Removes the last node in the path and all sub-nodes."
@@ -62,15 +61,17 @@
   "Assumes a node-path in the format '/env/service/property-name'."
   [node-path]
   (let [all-nodes (rest (string/split node-path #"\/"))]
-    (into 
-      [] 
-      (for [idx (range 1 (+ (count all-nodes) 1))]
-        (let [rooted-join (partial ft/path-join "/")]
-          (apply rooted-join (take idx all-nodes)))))))
+    (vec
+     (for [idx (range 1 (inc (count all-nodes)))]
+       (let [rooted-join (partial ft/path-join "/")]
+         (apply rooted-join (take idx all-nodes)))))))
 
 (defn exists?
   [node-name]
-  (if (zk/exists zkcl node-name) true false))
+  (cond
+   (nil? node-name)           false
+   (zk/exists zkcl node-name) true
+   :else                      false))
 
 (defn create
   [node-name]
@@ -80,10 +81,9 @@
   [node-path]
   (let [all-nodes (node-paths node-path)]
     (loop [nodes all-nodes]
-      (when (first nodes)
-        (if (not (exists? (first nodes)))
-          (create (first nodes))))
-      (if (> (count (rest nodes)) 0) 
+      (when-not (exists? (first nodes))
+        (create (first nodes)))
+      (when (pos? (count (rest nodes))) 
         (recur (rest nodes))))))
 
 (defn set-value
@@ -97,7 +97,7 @@
 
 (defn get-value
   [node-name]
-  (if (not (exists? node-name)) nil
+  (when (exists? node-name)
     (data/to-string (:data (zk/data zkcl node-name)))))
 
 (defn delete-all

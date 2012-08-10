@@ -11,7 +11,7 @@
     (apply vector 
            (filter 
              #(re-find #"\.properties$" %) 
-             (map #(. % getPath) (file-seq (io/file fpath)))))))
+             (map #(.getPath %) (file-seq (io/file fpath)))))))
 
 (defn parse-files
   [fpath]

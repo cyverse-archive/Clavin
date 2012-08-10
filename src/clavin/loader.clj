@@ -6,20 +6,20 @@
             [clojure.string :as string]))
 
 (def prop-hosts
-  #(into [] (map string/trim (string/split (get %1 %2) #","))))
+  #(vec (map string/trim (string/split (get %1 %2) #","))))
 
 (defn- set-of-hosts
   [acl-props]
   (set 
-    (flatten 
-      (into [] (for [ak (keys acl-props)] 
-                 (prop-hosts acl-props ak))))))
+   (flatten 
+    (vec (for [ak (keys acl-props)] 
+           (prop-hosts acl-props ak))))))
 
 (defn- list-of-host-deployments
   [host acl-props]
-  (into [] (filter 
-             #(contains? (set (prop-hosts acl-props %1)) host) 
-             (keys acl-props))))
+  (vec (filter 
+        #(contains? (set (prop-hosts acl-props %1)) host) 
+        (keys acl-props))))
 
 (defn- host-map
   [host acl-props]
@@ -52,7 +52,7 @@
         hosts-root  "/hosts"
         all-hosts   (keys hms)]
     (zk/with-zk
-      (when (not (zk/exists? hosts-root))
+      (when-not (zk/exists? hosts-root)
         (println (str "Creating " hosts-root))
         (zk/create hosts-root)) 
       
@@ -80,7 +80,7 @@
           
           (doseq [dep host-deps]
             (let [dep-path (ft/path-join host-path dep)]
-              (when (not (zk/exists? dep-path))
+              (when-not (zk/exists? dep-path)
                 (println (str "Creating " dep-path))
                 (zk/create dep-path))
               
@@ -105,7 +105,7 @@
           dpmt-path (ft/path-join env-path dpmt)
           svc-path  (ft/path-join dpmt-path svc)]
       ;;Create the app path and set its ACLs.
-      (when (not (zk/exists? app-path))
+      (when-not (zk/exists? app-path)
         (println (str "Creating " app-path))
         (zk/create app-path))
       
@@ -113,7 +113,7 @@
       (zk/create app-path)
       
       ;;Create the environment path and set its ACLs.
-      (when (not (zk/exists? env-path))
+      (when-not (zk/exists? env-path)
         (println (str "Creating " env-path))
         (zk/create env-path))
       
@@ -121,7 +121,7 @@
       (zk/set-acl env-path acls)
       
       ;;Create the deployment path and set its ACLs.
-      (when (not (zk/exists? dpmt-path))
+      (when-not (zk/exists? dpmt-path)
         (println (str "Creating " dpmt-path))
         (zk/create dpmt-path))
       
