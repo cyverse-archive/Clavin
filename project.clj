@@ -1,6 +1,7 @@
 (defproject clavin "1.1.0-SNAPSHOT"
   :description "A command-line tool for loading service configurations into Zookeeper."
-  :dependencies [[org.clojure/clojure "1.4.0"]
+  :dependencies [[org.antlr/stringtemplate "4.0.2"]
+                 [org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.cli "0.2.1"]
                  [org.iplantc/clojure-commons "1.1.0-SNAPSHOT"]
                  [zookeeper-clj "0.9.1"]]

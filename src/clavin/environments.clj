@@ -4,12 +4,25 @@
   (:require [clojure.string :as string])
   (:import [java.io PushbackReader]))
 
-(defn- load-envs
+(defn load-envs
   "Loads the environment settings from a specified file."
   [filename]
   (with-open [r (PushbackReader. (reader filename))]
     (binding [*read-eval* false]
       (read r))))
+
+(defn replace-placeholders
+  "Replaces placeholders in an environment with the actual values."
+  [env]
+  (letfn [(gval [k]
+            (let [v (env k)]
+              (if (nil? v)
+                (throw (Exception. (str "bad placeholder: " v)))
+                v)))
+          (rep [v]
+            (string/replace v #"\$\{([^\}]+)\}"
+                            #(rep (gval (keyword (second %))))))]
+    (into {} (map (fn [[k v]] [k (rep v)]) env))))
 
 (defn- keyset
   "Obtains a set containing the keys of a map."
@@ -21,7 +34,7 @@
   [envs]
   (mapcat vals (vals envs)))
 
-(defn- envs-valid?
+(defn envs-valid?
   "Verifies that all of the environments have the same set of properties
    defined."
   [envs]
@@ -34,7 +47,7 @@
   (let [env-keys (map keyset (envs-list envs))]
     (difference (apply union env-keys) (apply intersection env-keys))))
 
-(defn- show-envs-invalid-msg
+(defn show-envs-invalid-msg
   "Prints a message indicating that an environment file is not valid."
   [envs filename]
   (println filename "is not valid.")
