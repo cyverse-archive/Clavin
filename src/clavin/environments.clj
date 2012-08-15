@@ -86,7 +86,6 @@
   "Determines the name of the environment associated with a deployment name."
   [envs dep]
   (let [names (map first (filter #(= dep (second %)) (env-names envs)))]
-    (println (env-names envs))
     (when (empty? names)
       (throw (Exception. (str "no environment found for deployment " dep))))
     (when (> (count names) 1)

@@ -1,5 +1,6 @@
 (ns clavin.core
   (:gen-class)
+  (:use [clojure.java.io :only [file]])
   (:require [clojure.tools.cli :as cli]
             [clavin.environments :as env]
             [clavin.generator :as gen]
@@ -37,6 +38,24 @@
 
 (def ^:private required-args
   [:envs-file :template-dir :host :acl :deployment])
+
+(defn parse-files-args
+  [args]
+  (cli/cli
+   args
+   ["-h" "--help" "Show help." :default false :flag true]
+   ["-f" "--envs-file" "The file containing the environment definitions."
+    :default nil]
+   ["-t" "--template-dir" "The directory containing the templates."
+    :default nil]
+   ["-a" "--app" "The application the settings are for." :default "de"]
+   ["-e" "--env" "The environment that the options are for." :default nil]
+   ["-d" "--deployment" "The deployment that the properties files are for."
+    :default nil]
+   ["--dest" "The destination directory for the files." :default nil]))
+
+(def ^:private required-files-args
+  [:envs-file :template-dir :deployment :dest])
 
 (defn parse-hosts-args
   [args]
@@ -147,6 +166,30 @@
       (println "Done loading hosts.")
       (System/exit 0))))
 
+(defn handle-files
+  [args-vec]
+  (let [[opts args help-str] (parse-files-args args-vec)]
+    (validate-opts opts help-str required-files-args)
+    (let [envs-file    (get-regular-file opts help-str :envs-file)
+          template-dir (get-directory opts help-str :template-dir)
+          envs         (env/load-envs envs-file)
+          templates    (if (empty? args) (gen/list-templates template-dir) args)
+          dep          (:deployment opts)
+          env-name     (or (:env opts) (env/env-for-dep envs dep))
+          app          (:app opts)
+          env          (get-in envs (map keyword [env-name dep]))
+          env-path     (str app "." env-name "." dep)
+          dest         (:dest opts)]
+
+      (when (nil? env)
+        (println "no environment defined for" env-path)
+        (System/exit 1))
+
+      (when-not (ft/dir? dest)
+        (.mkdirs (file dest)))
+
+      (gen/generate-all-files env template-dir templates dest))))
+
 (defn handle-properties
   [args-vec]
   (let [[opts args help-str] (parse-args args-vec)]
@@ -191,6 +234,7 @@
 
 (def ^:private subcommand-fns
   {"help"  (fn [args] (main-help args) (System/exit 0))
+   "files" handle-files
    "props" handle-properties
    "hosts" handle-hosts
    "envs"  handle-environments})

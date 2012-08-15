@@ -13,12 +13,23 @@
         template-file (file template-dir template-name)]
     (ST. (slurp template-file) \$ \$)))
 
-(defn- gen-props
+(defn- gen-file
   [env template-dir template-name]
   (let [st (load-template template-dir template-name)]
     (dorun (map (fn [[k v]] (.add st (string/replace (name k) "-" "_") v)) env))
-    (doto (Properties.)
-      (.load (StringReader. (.render st))))))
+    (.render st)))
+
+(defn- write-file
+  [env template-dir template-name dest-dir]
+  (let [dest-file (file dest-dir (str template-name ".properties"))]
+    (print "Writing" (.getPath dest-file) "...")
+    (spit dest-file (gen-file env template-dir template-name))
+    (println "done.")))
+
+(defn- gen-props
+  [env template-dir template-name]
+  (doto (Properties.)
+    (.load (StringReader. (gen-file env template-dir template-name)))))
 
 (defn generate-props
   [env template-dir template-name]
@@ -29,6 +40,16 @@
   [env template-dir template-names]
   (let [env (replace-placeholders env)]
     (into {} (map #(vector % (gen-props env template-dir %)) template-names))))
+
+(defn generate-file
+  [env template-dir template-name dest-dir]
+  (let [env (replace-placeholders env)]
+    (write-file env template-dir template-name dest-dir)))
+
+(defn generate-all-files
+  [env template-dir template-names dest-dir]
+  (let [env (replace-placeholders env)]
+    (dorun (map #(write-file env template-dir % dest-dir) template-names))))
 
 (defn list-templates
   [template-dir]
