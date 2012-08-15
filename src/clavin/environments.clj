@@ -63,12 +63,17 @@
       (println filename "is valid.")
       (show-envs-invalid-msg envs filename))))
 
+(defn- env-names
+  "Obtains the list of environment names from the environments map."
+  [envs]
+  (mapcat (fn [[k v]] (map #(map name [k (key %)]) v)) envs))
+
 (defn list-envs
   "Lists all of the environments defined in an environment file."
   [filename]
   (let [hdrs  ["environment" "deployment"]
         envs  (load-envs filename)
-        names (mapcat (fn [[k v]] (map #(map name [k (key %)]) v)) envs)
+        names (env-names envs)
         width (apply max (map count (apply concat (conj names hdrs))))
         sep   (apply str (take width (repeat "-")))
         fcol  (fn [v w] (apply str v (take (- w (count v)) (repeat " "))))
@@ -76,3 +81,15 @@
     (apply println (fcols hdrs width))
     (apply println (fcols [sep sep] width))
     (dorun (map (partial apply println) (map #(fcols % width) names)))))
+
+(defn env-for-dep
+  "Determines the name of the environment associated with a deployment name."
+  [envs dep]
+  (let [names (map first (filter #(= dep (second %)) (env-names envs)))]
+    (println (env-names envs))
+    (when (empty? names)
+      (throw (Exception. (str "no environment found for deployment " dep))))
+    (when (> (count names) 1)
+      (throw
+       (Exception. (str "multiple environments found for deployment " dep))))
+    (first names)))

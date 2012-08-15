@@ -1,5 +1,6 @@
 (ns clavin.loader
-  (:require [clavin.properties :as props]
+  (:require [clavin.generator :as gen]
+            [clavin.properties :as props]
             [clavin.zk :as zk]
             [clojure-commons.file-utils :as ft]
             [clojure-commons.props :as ccprops]
@@ -154,10 +155,7 @@
           (zk/set-value node-path node-data))))))
 
 (defn load-settings
-  [app env dpmt filepath acls]
-  (let [svc-settings (props/parse-files filepath)
-        all-svcs     (keys svc-settings)
-        rooted-join  (partial ft/path-join "/")]
-    (doseq [svc all-svcs]
-      (load-service app env dpmt svc (get svc-settings svc) acls))))
-
+  [app env-name dpmt template-dir templates acls env]
+  (dorun
+   (map (fn [[svc settings]] (load-service app env-name dpmt svc settings acls))
+        (gen/generate-all-props env template-dir templates))))
