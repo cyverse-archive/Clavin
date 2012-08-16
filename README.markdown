@@ -321,154 +321,235 @@ chain (or a recursive chain) will cause a stack overflow error in Clavin.
 Checks for recursive chains can be added sometime in the future if this begins
 to cause a problem.
 
+Validating an Environments File
+-------------------------------
+
+In order for an environments file to be useful, every environment has to have
+the same set of properties defined.  Clavin provides a way to ensure that this
+is the case.  Here's an example of a valid file check:
+
+```
+$ clavin envs -v -f environments.clj 
+environments.clj is valid.
+```
+
+Here's an example of an invalid file check:
+
+```
+$ clavin envs -v -f environments.clj 
+environments.clj is not valid.
+
+Please check the following properties:
+	:admib-groups
+	:admin-groups
+	:cas-base
+	:case-base
+```
+
+In this case, it appears that some of the property names were mistyped in one
+or more environments.
+
+Listing Environments in an Environments File
+--------------------------------------------
+
+The environments file can get fairly big, so it's sometimes convenient to be
+able to list the environments that are defined within a file.  The envs
+subcommand can be used for this purpose as well.
+
+```
+$ clavin envs -l -f environments.clj
+environment deployment 
+----------- -----------
+env-1       dep-1      
+env-1       dep-2      
+```
+
+In this example, the environment definition file has one environment, `env-1`
+containing two deployments, `dep-1` and `dep-2`.
+
 Loading properties into Zookeeper
 ---------------------------------
 
-You will need to have the Java properties files for the services you're going
-to load and the ACLs file for the deployment you're working with. Then you can
-run the following command:
+You will need to have access to configuration file templates for the services
+you're going to load the confgurations for and an environment definition file
+that contains definitions for all of the placeholder values that are used in
+the configuration files.  Then you can run the following command:
 
 ```
-clavin props --host 127.0.0.1 --acl <path-to-acls-file> --file <path-to-properties-file> -a app -e dev -d dep-2
+clavin props --host 127.0.0.1 --acl <path-to-acls-file> -f <path-to-environments-file> -t <path-to-template-dir> -a app -e dev -d dep-2 service-name1 service-name-2
 ```
 
-Remember: the -a is the app you're loading, the -e tells what enviroment
-you're loading it into, and the -d tells which deployment in the environment
-you're setting up.
+The -a option refers to the app that you're loading configurations for.
+Currently, the Discovery Environment is the only application supported by
+Clavin, so the app will always be `de`.  Because of this, the default value
+for the -a option is `de` and the -a option does not have to be specified.
 
-The -a, -e, and -d options MUST correspond to a deployment listed in the ACLs
-file indicated with the --acl option. For instance, in the above example there
-must be a key of "app.dev.dep-2" with IP addresses associated with it in the
---acl file. You will get a stack trace if it doesn't appear and nothing will
-get changed in Zookeeper.
+The -e option refers to the environment that you're loading configurations
+for, which corresponds to the name of the environment in the environments file
+(or the environment and deployment listing described above).  In cases where
+the deployment name is unique across all environments, the environment can be
+determined from the deployment name, so it's not necessary to specify the -e
+option unless another deployment of the same name appears in another
+environment.
 
-The name of the properties file is significant. The name shouldn't contain any
-"."'s and should be of the form <service-name>.properties. The service name is
-extracted from the filename and is used to separate the settings for each
-service in Zookeeper.
+The -d option refers to the deployment that you're loading configurations
+for.  Once again, this is the same as the name of the deployment in the
+environments file (or the environment and deployment listing mentioned
+above).  This option _must_ correspond to one of the deployments defined in
+the environments file.
 
-Here's nibblonian.properties as it appears in the configulon git repo:
+The values of the -a, -e, and -d options MUST correspond to a deployment
+listed in the ACLs file indicated with the --acl option. For instance, in the
+above example there must be a key of "app.dev.dep-2" with IP addresses
+associated with it in the --acl file. You will get a stack trace if it doesn't
+appear and nothing will get changed in Zookeeper.
 
-```
-# Jargon-related configuration
-nibblonian.irods.host=lolinternal.somethingorother.org
-nibblonian.irods.port=1247
-nibblonian.irods.user=rods
-nibblonian.irods.password=lol
-nibblonian.irods.home=/tempZone/home/
-nibblonian.irods.zone=iplant
-nibblonian.irods.defaultResource=
+The value of the -f flag should contain the path to the environment definition
+file and the value of the -t flag should contain the path to the directory
+containing the template files.  Note that all of the template files must have
+an extension of `.st` and the name of the file without the extension
+corresponds to the name of the service that is being configured.
 
-# Controls the size of the preview. In bytes.
-nibblonian.app.preview-size=8000
-
-# The size (in bytes) at which a preview becomes a rawcontent link in the manifest.
-nibblonian.app.data-threshold=8000
-
-# The maximum number of attempts that nibblonian will make to connect if the connection gets severed.
-nibblonian.app.max-retries=10
-
-# The amount of time (in milliseconds) that the nibblonian will wait between connection attempts.
-nibblonian.app.retry-sleep=1000
-
-# The path to the community data directory in iRODS
-nibblonian.app.community-data=/tempZone/home/shared/
-
-#The port nibblonian should listen on
-nibblonian.app.listen-port=31360
-
-#REPL-related configuration
-nibblonian.swank.enabled=
-nibblonian.swank.port=
-```
-
-I use the following command to load it into Zookeeper:
+The service name arguments correspond to the names of the services whose
+configurations you want to load into Zookeeper.  For example, if you wanted to
+load only the configurations for metadactyl and donkey, you would mention both
+services on the command line:
 
 ```
-clavin props --acl dep2-acls.properties --file dep-2/nibblonian.properties -a app -e dev -d dep-2
+clavin props --host 127.0.0.1 --acl acls.properties -f environments.clj -t templates -d dep-2 metadactyl donkey
 ```
 
-In Zookeeper that will create a the /app/dev/dep-2/nibblonian node. That node
-will in turn contain nodes for each configuration setting in the properties
-file. That means that Zookeeper will have a node created at
-/app/dev/dep-2/nibblonian/nibblonian.irods.host and the value
-"lolinternal.somethingorother.org" will be associated with it. Here's the
-output from the dev Zookeeper cluster:
+To load all of the properties files without having to list them all, you can
+simply not include any service names on the command line:
 
 ```
-[zk: localhost:2181(CONNECTED) 2] get /app/dev/dep-2/nibblonian/nibblonian.irods.host
-lolinternal.somethingorother.org
-cZxid = 0x2000002fe
-ctime = Tue Jan 17 16:09:07 MST 2012
-mZxid = 0x200000300
-mtime = Tue Jan 17 16:09:07 MST 2012
-pZxid = 0x2000002fe
-cversion = 0
-dataVersion = 1
-aclVersion = 1
-ephemeralOwner = 0x0
-dataLength = 31
-numChildren = 0
+clavin props --host 127.0.0.1 --acl acls.properties -f environments.clj -t templates -d dep-2
 ```
 
-The first line of output shows the value associated with the node.
+Generating Properties Files
+---------------------------
 
-*An important shortcut:* You can load a directory full of properties files
- like this:
+Not all iPlant services and web applications associated with the Discovery
+Environment use Zookeeper to manage configuration settings.  For the
+components that do not use Zookeeper, Clavin provides a way to generate Java
+properties files from templates and environments files.  The subcommand used
+to generate properties files is `files`.  The command line for the `files`
+subcommand is similar to that of the `props` subcommand; the only differences
+are that the ACL and Zookeeper connection settings aren't required and a
+destination directory is required:
 
 ```
-clavin props --host 127.0.0.1 --acl <path-to-acls> --dir <path-to-prop-dir> -a <app> -e <env> -d <deployment>
+clavin files --dest <output-dir> -f <path-to-environments-file> -t <path-to-template-dir> -a app -e dev -d dep-2 service-name1 service-name-2
 ```
 
-All of the files in <path-to-prop-dir> will be processed and loaded into
-Zookeeper.
+The only command-line option that is unique to the `files` subcommand is
+--dest, which is used to specify the path to the output directory.  All of the
+generated properties files will be placed in this directory.  The file names
+will be the service name with a `.properties` extension.  For example, if you
+generate a properties file for the service, `discoveryenvironment` then the
+name of the generated file will be `discoveryenvironment.properties`.
+
+See the `Loading properties into Zookeeper` section for details about the rest
+of the command-line options.
 
 
 Clavin command-line
 -------------------
 
-Running 'clavin' without any arguments on the command-line will list out the
-supported sub-tasks:
+Running `clavin` with the `help` subcommand will list out the supported
+sub-tasks:
 
 ```
-[wregglej@example ~]$ clavin help
-clavin props|hosts|help [options]
+$ clavin help
+clavin envs|files|help|hosts|props [options]
 Each command has its own --help.
 ```
 
-Currently, the two supported sub-tasks are 'props', which allows you to load
-in either a directory or a single file full of configuration options, and
-'hosts', which loads the layouts of the different environments.
-
-Here's the --help of the 'props' sub-task:
+Running `clavin` without any arguments will provide a brief error message
+along with the help text:
 
 ```
-[wregglej@example ~]$ clavin props --help
+$ clavin
+Something weird happened.
+clavin envs|files|help|hosts|props [options]
+Each command has its own --help.
+```
+
+Currently, the supported subcommands are:
+
+<table border='1'>
+    <thead>
+        <tr><th>Subcommand</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>envs</td><td>Performs actions on environment files.</td></tr>
+        <tr><td>files</td><td>Generates properties files.</td></tr>
+        <tr><td>help</td><td>Displays a brief help message.</td></tr>
+        <tr><td>hosts</td><td>Loads admin ACLs into Zookeeper.</td></tr>
+        <tr><td>props</td><td>Loads configurations into Zookeeper.</td></tr>
+    </tbody>
+</table>
+
+Here's the help message for the `envs` subcommand:
+
+```
+$ clavin envs --help
+Usage:
+
+ Switches                       Default  Desc                                            
+ --------                       -------  ----                                            
+ -h, --no-help, --help          false    Show help.                                      
+ -l, --no-list, --list          false    List environments.                              
+ -v, --no-validate, --validate  false    Validate the environments file                  
+ -f, --envs-file                         The file containing the environment definitions 
+```
+
+Here's the help message for the `files` subcommand:
+
+```
+$ clavin files --help
+Usage:
+
+ Switches               Default  Desc                                              
+ --------               -------  ----                                              
+ -h, --no-help, --help  false    Show help.                                        
+ -f, --envs-file                 The file containing the environment definitions.  
+ -t, --template-dir              The directory containing the templates.           
+ -a, --app              de       The application the settings are for.             
+ -e, --env                       The environment that the options are for.         
+ -d, --deployment                The deployment that the properties files are for. 
+ --dest                          The destination directory for the files.          
+```
+
+Here's the help message for the `hosts` subcommand:
+
+```
+$ clavin hosts --help
+Usage:
+
+ Switches               Default  Desc                                         
+ --------               -------  ----                                         
+ -h, --no-help, --help  false    Show help.                                   
+ --acl                           The file containing Zookeeper hostname ACLs. 
+ --host                          The Zookeeper host to connection to.         
+ --port                 2181     The Zookeeper client port to connection to.  
+```
+
+Here's the help message for the `props` subcommand:
+
+```
+$ clavin props --help
 Usage:
 
  Switches               Default  Desc                                                            
  --------               -------  ----                                                            
  -h, --no-help, --help  false    Show help.                                                      
- --dir                           Read all of the configs from this directory.                    
- --file                          Read in a specific file.                                        
+ -f, --envs-file                 The file containing the environment definitions.                
+ -t, --template-dir              The directory containing the templates.                         
  --host                          The Zookeeper host to connection to.                            
  --port                 2181     The Zookeeper client port to connection to.                     
  --acl                           The file containing Zookeeper hostname ACLs.                    
- -a, --app                       The application the settings are for.                           
+ -a, --app              de       The application the settings are for.                           
  -e, --env                       The environment that the options should be entered into.        
  -d, --deployment                The deployment inside the environment that is being configured. 
-```
-
-Here's the --help of the 'hosts' sub-task:
-
-```
-[wregglej@example ~]$ clavin hosts --help
-Usage:
-
- Switches               Default  Desc                                         
- --------               -------  ----                                         
- -h, --no-help, --help  false    Shop help.                                   
- --acl                           The file containing Zookeeper hostname ACLs. 
- --host                          The Zookeeper host to connection to.         
- --port                 2181     The Zookeeper client port to connection to.  
 ```
