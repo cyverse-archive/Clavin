@@ -92,3 +92,10 @@
       (throw
        (Exception. (str "multiple environments found for deployment " dep))))
     (first names)))
+
+(defn envs-by-dep
+  "Obtains a list of environments organized by environment and deployment."
+  [envs]
+  (map (fn [ks]
+         (conj (vec ks) (get-in envs (map keyword ks))))
+       (env-names envs)))

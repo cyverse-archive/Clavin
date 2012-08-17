@@ -5,6 +5,7 @@
             [clavin.environments :as env]
             [clavin.generator :as gen]
             [clavin.loader :as loader]
+            [clavin.templates :as ct]
             [clavin.zk :as zk]
             [clojure-commons.file-utils :as ft]
             [clojure.string :as string]
@@ -80,6 +81,19 @@
 
 (def ^:private required-envs-args
   [[:list :validate] :envs-file])
+
+(defn parse-templates-args
+  [args]
+  (cli/cli
+   args
+   ["-h" "--help" "Show help." :default false :flag true]
+   ["-l" "--list" "List templates." :default false :flag true]
+   ["-v" "--validate" "Validate templates." :default false :flag true]
+   ["-t" "--template-dir" "The directory containing the templates."
+    :default nil]))
+
+(def ^:private required-templates-args
+  [[:list :validate] :template-dir])
 
 (defn keyword->opt-name
   [k]
@@ -173,7 +187,7 @@
     (let [envs-file    (get-regular-file opts help-str :envs-file)
           template-dir (get-directory opts help-str :template-dir)
           envs         (env/load-envs envs-file)
-          templates    (if (empty? args) (gen/list-templates template-dir) args)
+          templates    (if (empty? args) (ct/list-templates template-dir) args)
           dep          (:deployment opts)
           env-name     (or (:env opts) (env/env-for-dep envs dep))
           app          (:app opts)
@@ -197,7 +211,7 @@
     (let [envs-file    (get-regular-file opts help-str :envs-file)
           template-dir (get-directory opts help-str :template-dir)
           envs         (env/load-envs envs-file)
-          templates    (if (empty? args) (gen/list-templates template-dir) args)
+          templates    (if (empty? args) (ct/list-templates template-dir) args)
           acl-file     (get-regular-file opts help-str :acl)
           acl-props    (ccprops/read-properties acl-file)
           dep          (:deployment opts)
@@ -232,12 +246,21 @@
       (cond (:list opts)     (env/list-envs envs-file)
             (:validate opts) (env/validate-envs envs-file)))))
 
+(defn handle-templates
+  [args-vec]
+  (let [[opts args help-str] (parse-templates-args args-vec)]
+    (validate-opts opts help-str required-templates-args)
+    (let [template-dir (get-directory opts help-str :template-dir)]
+      (cond (:list opts)     (ct/display-template-list template-dir)
+            (:validate opts) (ct/validate-templates template-dir)))))
+
 (def ^:private subcommand-fns
   {"help"  (fn [args] (main-help args) (System/exit 0))
-   "files" handle-files
-   "props" handle-properties
-   "hosts" handle-hosts
-   "envs"  handle-environments})
+   "files"     handle-files
+   "props"     handle-properties
+   "hosts"     handle-hosts
+   "envs"      handle-environments
+   "templates" handle-templates})
 
 (defn main-help
   [args]

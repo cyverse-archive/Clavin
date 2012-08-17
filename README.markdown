@@ -233,6 +233,56 @@ nibblonian.swank.enabled =
 nibblonian.swank.port = 
 ```
 
+Listing and Validating Configuration File Templates
+---------------------------------------------------
+
+When generating configuration settings, it can be useful to list the available
+templates.  Also, when a template file is modified or created, it can be
+useful to verify that it is formatted correctly before attempting to generate
+configuration settings from it.  Clavin provides the `templates` subcommand
+for these settings:
+
+```
+clavin templates -t <path-to-template-dir> [-l|-v]
+```
+
+Here's an example template file listing:
+
+```
+$ clavin templates -l -t ~/tmp/templates/
+belphegor-confluence
+belphegor
+buggalo
+confluence
+conrad
+discoveryenvironment
+donkey
+iplant-email
+jex
+metadactyl
+nibblonian
+notificationagent
+osm
+panopticon
+scruffian
+```
+
+Here's an example successful template file validation:
+
+```
+$ clavin templates -v -t ~/tmp/templates/
+All templates are valid.
+```
+
+Here's an example unsuccessful template file validation:
+
+```
+$ clavin templates -v -t ~/tmp/templates/
+belphegor-confluence is invalid: #<STLexerMessage 4:77: invalid character '-'>
+belphegor-confluence is invalid: #<STCompiletimeMessage 4:78: 'base' came as a complete surprise to me>
+Errors were found.
+```
+
 Creating an Environments File
 -----------------------------
 
@@ -461,7 +511,7 @@ sub-tasks:
 
 ```
 $ clavin help
-clavin envs|files|help|hosts|props [options]
+clavin envs|files|help|hosts|props|templates [options]
 Each command has its own --help.
 ```
 
@@ -471,7 +521,7 @@ along with the help text:
 ```
 $ clavin
 Something weird happened.
-clavin envs|files|help|hosts|props [options]
+clavin envs|files|help|hosts|props|templates [options]
 Each command has its own --help.
 ```
 
@@ -487,6 +537,7 @@ Currently, the supported subcommands are:
         <tr><td>help</td><td>Displays a brief help message.</td></tr>
         <tr><td>hosts</td><td>Loads admin ACLs into Zookeeper.</td></tr>
         <tr><td>props</td><td>Loads configurations into Zookeeper.</td></tr>
+        <tr><td>templates</td><td>Performs actions on templates.</td></tr>
     </tbody>
 </table>
 
@@ -552,4 +603,18 @@ Usage:
  -a, --app              de       The application the settings are for.                           
  -e, --env                       The environment that the options should be entered into.        
  -d, --deployment                The deployment inside the environment that is being configured. 
+```
+
+Here's the help message for the `templates` subcommand:
+
+```
+$ clavin templates -h
+Usage:
+
+ Switches                       Default  Desc                                    
+ --------                       -------  ----                                    
+ -h, --no-help, --help          false    Show help.                              
+ -l, --no-list, --list          false    List templates.                         
+ -v, --no-validate, --validate  false    Validate templates.                     
+ -t, --template-dir                      The directory containing the templates. 
 ```

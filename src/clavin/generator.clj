@@ -1,17 +1,12 @@
 (ns clavin.generator
   (:use [clojure.java.io :only [file]]
         [clavin.environments
-         :only [load-envs envs-valid? replace-placeholders]])
+         :only [load-envs envs-valid? replace-placeholders]]
+        [clavin.templates :only [load-template]])
   (:require [clojure.string :as string])
   (:import [java.io FilenameFilter StringReader]
            [java.util Properties]
            [org.stringtemplate.v4 ST]))
-
-(defn load-template
-  [template-dir template-name]
-  (let [template-name (str template-name ".st")
-        template-file (file template-dir template-name)]
-    (ST. (slurp template-file) \$ \$)))
 
 (defn- gen-file
   [env template-dir template-name]
@@ -51,11 +46,3 @@
   (let [env (replace-placeholders env)]
     (dorun (map #(write-file env template-dir % dest-dir) template-names))))
 
-(defn list-templates
-  [template-dir]
-  (map
-   #(string/replace % #"[.]st\z" "")
-   (seq (.list (file template-dir)
-               (proxy [FilenameFilter] []
-                 (accept [dir filename]
-                   (not (nil? (re-find #"[.]st\z" filename)))))))))
