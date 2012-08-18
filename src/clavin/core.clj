@@ -18,6 +18,7 @@
   (Integer. v))
 
 (defn parse-args
+  "Parses the arguments for the 'props' subcommand."
   [args]
   (cli/cli 
    args 
@@ -41,6 +42,7 @@
   [:envs-file :template-dir :host :acl :deployment])
 
 (defn parse-files-args
+  "Parses the arguments for the 'files' subcommand."
   [args]
   (cli/cli
    args
@@ -59,6 +61,7 @@
   [:envs-file :template-dir :deployment :dest])
 
 (defn parse-hosts-args
+  "Parses the arguments for the 'hosts' subcommand."
   [args]
   (cli/cli 
     args
@@ -69,6 +72,7 @@
      :parse-fn to-integer]))
 
 (defn parse-envs-args
+  "Parses the arguments for the 'envs' subcommand."
   [args]
   (cli/cli
    args
@@ -83,6 +87,7 @@
   [[:list :validate] :envs-file])
 
 (defn parse-templates-args
+  "Parses the arguments for the 'templates' subcommand."
   [args]
   (cli/cli
    args
@@ -98,10 +103,15 @@
   [[:list :validate] :template-dir])
 
 (defn keyword->opt-name
+  "Converts a keyword to an option name."
   [k]
   (str "--" (name k)))
 
 (defn get-directory
+  "Gets the path to a directory from a command-line option.  The path must
+   exist and refer to an extant directory if the command-line option is
+   specified.  If the path does not exist or does not refer to an extant
+   directory then an error message will be displayed and the program will exit."
   [opts help-str opt-k]
   (let [v (opts opt-k)]
     (when-not (or (nil? v) (ft/dir? v))
@@ -111,6 +121,10 @@
     v))
 
 (defn get-regular-file
+  "Gets the path to a regular file from a command-line option.  The path must
+   exist and refer to an extant file if the command-line option is specified.
+   If the path does not exist or does not refer to a regular file then an error
+   message will be displayed and the program will exit."
   [opts help-str opt-k]
   (let [v (opts opt-k)]
     (when-not (or (nil? v) (ft/file? v))
@@ -120,6 +134,10 @@
     v))
 
 (defn validate-single-opt
+  "Validates a single required option.  The option is assumed to be defined if
+   it contains any value that evaluates to true.  If the option contains a value
+   that evauates to false then an error message will be displayed and the
+   program will exit."
   [opts help-str opt-k]
   (when-not (opts opt-k)
     (println (keyword->opt-name opt-k) "is required.")
@@ -127,6 +145,9 @@
     (System/exit 1)))
 
 (defn validate-multiple-opts
+  "Validates multiple mutually exclusive options.  If none of the options
+   contains a true value or more than one option contains a true value then
+   an error message will be displayed and the program will exit."
   [opts help-str opt-ks]
   (let [defined-opts (filter opts opt-ks)
         opt-names    (string/join ", " (map keyword->opt-name opt-ks))]
@@ -136,6 +157,11 @@
       (System/exit 1))))
 
 (defn validate-opts
+  "Verifies that all required command-line options are actually specified on
+   the command line.  The required-opts argument should be a sequence in which
+   each element is either a keyword that corresponds to a command-line option
+   or a sequence of keywords that correspond to a set of mutually exclusive
+   command-line options."
   [opts help-str required-opts]
   (when (:help opts)
     (println help-str)
@@ -147,6 +173,7 @@
               required-opts)))
 
 (defn handle-hosts
+  "Performs tasks for the hosts subcommand."
   [args-vec]
   (let [[opts args help-str] (parse-hosts-args args-vec)]
     (when (:help opts)
@@ -183,6 +210,7 @@
       (System/exit 0))))
 
 (defn handle-files
+  "Performs tasks for the files subcommand."
   [args-vec]
   (let [[opts args help-str] (parse-files-args args-vec)]
     (validate-opts opts help-str required-files-args)
@@ -207,6 +235,7 @@
       (gen/generate-all-files env template-dir templates dest))))
 
 (defn handle-properties
+  "Performs tasks for the props subcommand."
   [args-vec]
   (let [[opts args help-str] (parse-args args-vec)]
     (validate-opts opts help-str required-args)
@@ -241,6 +270,7 @@
       (println "Done loading data into the" env-path "environment."))))
 
 (defn handle-environments
+  "Performs tasks for the envs subcommand."
   [args-vec]
   (let [[opts args help-str] (parse-envs-args args-vec)]
     (validate-opts opts help-str required-envs-args)
@@ -249,6 +279,10 @@
             (:validate opts) (env/validate-envs envs-file)))))
 
 (defn do-template-validation
+  "Validates all of the templates in the specified template directory.  If the
+   path to an environment definition file is also provided then the templates
+   will also be validated against every defined environment to ensure that there
+   are no unused or undefined properties."
   [template-dir envs]
   (let [valid? (ct/validate-templates template-dir)
         valid? (and valid? (ct/validate-placeholders template-dir envs))]
@@ -257,6 +291,7 @@
       (println "Errors were found."))))
 
 (defn handle-templates
+  "Performs tasks for the templates subcommand."
   [args-vec]
   (let [[opts args help-str] (parse-templates-args args-vec)]
     (validate-opts opts help-str required-templates-args)
