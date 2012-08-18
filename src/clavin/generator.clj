@@ -2,17 +2,11 @@
   (:use [clojure.java.io :only [file]]
         [clavin.environments
          :only [load-envs envs-valid? replace-placeholders]]
-        [clavin.templates :only [load-template]])
+        [clavin.templates :only [gen-file]])
   (:require [clojure.string :as string])
   (:import [java.io FilenameFilter StringReader]
            [java.util Properties]
            [org.stringtemplate.v4 ST]))
-
-(defn- gen-file
-  [env template-dir template-name]
-  (let [st (load-template template-dir template-name)]
-    (dorun (map (fn [[k v]] (.add st (string/replace (name k) "-" "_") v)) env))
-    (.render st)))
 
 (defn- write-file
   [env template-dir template-name dest-dir]

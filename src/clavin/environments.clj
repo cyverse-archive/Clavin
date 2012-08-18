@@ -4,6 +4,8 @@
   (:require [clojure.string :as string])
   (:import [java.io PushbackReader]))
 
+(def ^:private placeholder-re #"\$\{([^\}]+)\}")
+
 (defn load-envs
   "Loads the environment settings from a specified file."
   [filename]
@@ -20,9 +22,17 @@
                 (throw (Exception. (str "bad placeholder: " v)))
                 v)))
           (rep [v]
-            (string/replace v #"\$\{([^\}]+)\}"
+            (string/replace v placeholder-re
                             #(rep (gval (keyword (second %))))))]
     (into {} (map (fn [[k v]] [k (rep v)]) env))))
+
+
+(defn self-referenced-params
+  "Obtains a list of parameters in an environment that are referenced from
+   within that environment."
+  [env]
+  (let [get-param (comp keyword second)]
+    (set (mapcat (fn [[_ v]] (map get-param (re-seq placeholder-re v))) env))))
 
 (defn- keyset
   "Obtains a set containing the keys of a map."

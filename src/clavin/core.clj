@@ -74,9 +74,9 @@
    args
    ["-h" "--help" "Show help." :default false :flag true]
    ["-l" "--list" "List environments." :default false :flag true]
-   ["-v" "--validate" "Validate the environments file" :default false
+   ["-v" "--validate" "Validate the environments file." :default false
     :flag true]
-   ["-f" "--envs-file" "The file containing the environment definitions"
+   ["-f" "--envs-file" "The file containing the environment definitions."
     :default nil]))
 
 (def ^:private required-envs-args
@@ -90,6 +90,8 @@
    ["-l" "--list" "List templates." :default false :flag true]
    ["-v" "--validate" "Validate templates." :default false :flag true]
    ["-t" "--template-dir" "The directory containing the templates."
+    :default nil]
+   ["-f" "--envs-file" "The file containing the environment definitions."
     :default nil]))
 
 (def ^:private required-templates-args
@@ -246,16 +248,26 @@
       (cond (:list opts)     (env/list-envs envs-file)
             (:validate opts) (env/validate-envs envs-file)))))
 
+(defn do-template-validation
+  [template-dir envs]
+  (let [valid? (ct/validate-templates template-dir)
+        valid? (and valid? (ct/validate-placeholders template-dir envs))]
+    (if valid?
+      (println "All templates are valid.")
+      (println "Errors were found."))))
+
 (defn handle-templates
   [args-vec]
   (let [[opts args help-str] (parse-templates-args args-vec)]
     (validate-opts opts help-str required-templates-args)
-    (let [template-dir (get-directory opts help-str :template-dir)]
+    (let [template-dir (get-directory opts help-str :template-dir)
+          envs-file    (get-regular-file opts help-str :envs-file)
+          envs         (when-not (nil? envs-file) (env/load-envs envs-file))]
       (cond (:list opts)     (ct/display-template-list template-dir)
-            (:validate opts) (ct/validate-templates template-dir)))))
+            (:validate opts) (do-template-validation template-dir envs)))))
 
 (def ^:private subcommand-fns
-  {"help"  (fn [args] (main-help args) (System/exit 0))
+  {"help"      (fn [args] (main-help args) (System/exit 0))
    "files"     handle-files
    "props"     handle-properties
    "hosts"     handle-hosts

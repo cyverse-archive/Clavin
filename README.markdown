@@ -283,6 +283,36 @@ belphegor-confluence is invalid: #<STCompiletimeMessage 4:78: 'base' came as a c
 Errors were found.
 ```
 
+Validating Templates Against an Environments File
+-------------------------------------------------
+
+Clavin also provides the ability to validate templates against an environments
+file to verify that there are no undefined properties referenced in the
+templates and no unused properties defined in the environments file.  To do
+this, simply validate the templates and include the path to the environments
+file.
+
+Here's an example unsuccessful validation:
+
+```
+$ clavin templates -t ~/tmp/templates -f environments.clj -v
+Unused parameters were detected in dev.de-1:
+	 :db-max-idle-minutes
+Unused parameters were detected in dev.de-2:
+	 :db-max-idle-minutes
+Unused parameters were detected in qa.penguin:
+	 :db-max-idle-minutes
+Unused parameters were detected in qa.qa-1:
+	 :db-max-idle-minutes
+Unused parameters were detected in qa.qadb:
+	 :db-max-idle-minutes
+Unused parameters were detected in prod.prod:
+	 :db-max-idle-minutes
+Unused parameters were detected in staging.staging:
+	 :db-max-idle-minutes
+Errors were found.
+```
+
 Creating an Environments File
 -----------------------------
 
@@ -295,8 +325,8 @@ nested map definition:
 {:env-1
  {:dep-1
   {:first-setting  "foo"
-   :second-setting "bar"}}
- {:dep-2
+   :second-setting "bar"}
+  :dep-2
   {:first-setting  "baz"
    :second-setting "quux"}}
  :env-2
@@ -608,13 +638,14 @@ Usage:
 Here's the help message for the `templates` subcommand:
 
 ```
-$ clavin templates -h
+$ clavin templates --help
 Usage:
 
- Switches                       Default  Desc                                    
- --------                       -------  ----                                    
- -h, --no-help, --help          false    Show help.                              
- -l, --no-list, --list          false    List templates.                         
- -v, --no-validate, --validate  false    Validate templates.                     
- -t, --template-dir                      The directory containing the templates. 
+ Switches                       Default  Desc                                             
+ --------                       -------  ----                                             
+ -h, --no-help, --help          false    Show help.                                       
+ -l, --no-list, --list          false    List templates.                                  
+ -v, --no-validate, --validate  false    Validate templates.                              
+ -t, --template-dir                      The directory containing the templates.          
+ -f, --envs-file                         The file containing the environment definitions. 
 ```
