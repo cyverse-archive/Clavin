@@ -29,6 +29,18 @@ clavin files -f myenvironments.clj -t /path/to/template-dir -a app -e env -d
 deployment --dest /path/to/dest-dir
 ```
 
+To list current configuration settings on a services host:
+
+```
+clavin get-props --host 127.0.0.1 -s service-name prop-name-1 prop-name-2
+```
+
+To list current configuration settings on another host:
+
+```
+clavin get-props --host 127.0.0.1 --service-host somehost -s service-name prop-name-1 prop-name-2
+```
+
 Environment listing and validation:
 
 ```
@@ -506,6 +518,69 @@ simply not include any service names on the command line:
 clavin props --host 127.0.0.1 --acl acls.properties -f environments.clj -t templates -d dep-2
 ```
 
+Listing Configuration Settings in Zookeeper
+-------------------------------------------
+
+Once configuration settings have been loaded into Zookeeper, you can list them
+using the `get-props` subcommand.  Suppose that you wanted to list all of the
+configuration settings for the service, `foo` running on the local machine.  The
+command to do that would look something like this:
+
+```
+clavin get-props --host 127.0.0.1 -s foo
+```
+
+The output from this command contains several lines containing the property name
+followed by some whitespace an equals sign and the property value.  The output
+from the previous command could look something like this:
+
+```
+foo.app.listen-port  = 65535
+foo.bar.closing-time = 2:00
+```
+
+To improve the readability of the output, the equals signs are always aligned
+with the property names and property values left-justified in their respective
+columns.
+
+If you're only interested in specific property values then you can specify the
+property names on the command line using unnamed arguments.  For example, to
+explicitly list the `foo.app.listen-port` and `foo.bar.closing-time` properties
+from the example above, you could use something like this command:
+
+```
+clavin get-props --host 127.0.0.1 -s foo foo.app.listen-port foo.bar.closing-time
+```
+
+As a special case, the get-props subcommand will only display the property value
+if only one property name is specified.  This is helpful for being able to
+access property values from within shell scripts without having to parse the
+output:
+
+```
+$ clavin get-props --host 127.0.0.1 -s foo foo.app.listen-port
+65535
+```
+
+If you've read the previous sections, you may be wondering how Clavin determines
+which deployment to look up in Zookeeper.  The answer is that it determines the
+deployment the same way that the services themselves do: by looking up the IP
+address of the service host in the ACLs stored in Zookeeper.  The service host
+can be specified using the --service-host command-line option.  If the
+--service-host option is not specified then the IP address of the local host
+will be used.
+
+As with other subcommands, the Zookeeper host and port are specified using the
+--host and --port options, respectively.  The --host argument is required for
+this subcommand.  The --port argument is optional, and defaults to the standard
+Zookeeper port, 2181, if it's not provided.  The only other required argument
+for this subcommand is the -s or --service argument, which is used to specify
+the service name.
+
+As with all subcommands, the -h or --help option can be used to display a brief
+usage message.  This usage message contains brief descriptions of all of the
+command-line options.
+
 Generating Properties Files
 ---------------------------
 
@@ -633,6 +708,21 @@ Usage:
  -a, --app              de       The application the settings are for.                           
  -e, --env                       The environment that the options should be entered into.        
  -d, --deployment                The deployment inside the environment that is being configured. 
+```
+
+Here's the help message for the `get-props` subcommand:
+
+```
+$ clavin get-props --help
+Usage:
+
+ Switches               Default  Desc                                     
+ --------               -------  ----                                     
+ -h, --no-help, --help  false    Show help.                               
+ --host                          The Zookeeper host to connect to.        
+ --port                 2181     The Zookeeper port to connect to.        
+ -s, --service                   The service to get the settings for.     
+ --service-host                  The host that the service is running on. 
 ```
 
 Here's the help message for the `templates` subcommand:
