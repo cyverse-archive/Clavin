@@ -241,8 +241,8 @@ nibblonian.app.community-data = $irods_home$/shared
 nibblonian.app.listen-port  = $nibblonian_port$
 
 #REPL-related configuration
-nibblonian.swank.enabled = 
-nibblonian.swank.port = 
+nibblonian.swank.enabled =
+nibblonian.swank.port =
 ```
 
 Listing and Validating Configuration File Templates
@@ -421,14 +421,14 @@ the same set of properties defined.  Clavin provides a way to ensure that this
 is the case.  Here's an example of a valid file check:
 
 ```
-$ clavin envs -v -f environments.clj 
+$ clavin envs -v -f environments.clj
 environments.clj is valid.
 ```
 
 Here's an example of an invalid file check:
 
 ```
-$ clavin envs -v -f environments.clj 
+$ clavin envs -v -f environments.clj
 environments.clj is not valid.
 
 Please check the following properties:
@@ -450,10 +450,10 @@ subcommand can be used for this purpose as well.
 
 ```
 $ clavin envs -l -f environments.clj
-environment deployment 
+environment deployment
 ----------- -----------
-env-1       dep-1      
-env-1       dep-2      
+env-1       dep-1
+env-1       dep-2
 ```
 
 In this example, the environment definition file has one environment, `env-1`
@@ -652,12 +652,12 @@ Here's the help message for the `envs` subcommand:
 $ clavin envs --help
 Usage:
 
- Switches                       Default  Desc                                            
- --------                       -------  ----                                            
- -h, --no-help, --help          false    Show help.                                      
- -l, --no-list, --list          false    List environments.                              
- -v, --no-validate, --validate  false    Validate the environments file                  
- -f, --envs-file                         The file containing the environment definitions 
+ Switches                       Default  Desc
+ --------                       -------  ----
+ -h, --no-help, --help          false    Show help.
+ -l, --no-list, --list          false    List environments.
+ -v, --no-validate, --validate  false    Validate the environments file
+ -f, --envs-file                         The file containing the environment definitions
 ```
 
 Here's the help message for the `files` subcommand:
@@ -666,15 +666,15 @@ Here's the help message for the `files` subcommand:
 $ clavin files --help
 Usage:
 
- Switches               Default  Desc                                              
- --------               -------  ----                                              
- -h, --no-help, --help  false    Show help.                                        
- -f, --envs-file                 The file containing the environment definitions.  
- -t, --template-dir              The directory containing the templates.           
- -a, --app              de       The application the settings are for.             
- -e, --env                       The environment that the options are for.         
- -d, --deployment                The deployment that the properties files are for. 
- --dest                          The destination directory for the files.          
+ Switches               Default  Desc
+ --------               -------  ----
+ -h, --no-help, --help  false    Show help.
+ -f, --envs-file                 The file containing the environment definitions.
+ -t, --template-dir              The directory containing the templates.
+ -a, --app              de       The application the settings are for.
+ -e, --env                       The environment that the options are for.
+ -d, --deployment                The deployment that the properties files are for.
+ --dest                          The destination directory for the files.
 ```
 
 Here's the help message for the `hosts` subcommand:
@@ -683,12 +683,12 @@ Here's the help message for the `hosts` subcommand:
 $ clavin hosts --help
 Usage:
 
- Switches               Default  Desc                                         
- --------               -------  ----                                         
- -h, --no-help, --help  false    Show help.                                   
- --acl                           The file containing Zookeeper hostname ACLs. 
- --host                          The Zookeeper host to connection to.         
- --port                 2181     The Zookeeper client port to connection to.  
+ Switches               Default  Desc
+ --------               -------  ----
+ -h, --no-help, --help  false    Show help.
+ --acl                           The file containing Zookeeper hostname ACLs.
+ --host                          The Zookeeper host to connection to.
+ --port                 2181     The Zookeeper client port to connection to.
 ```
 
 Here's the help message for the `props` subcommand:
@@ -697,17 +697,17 @@ Here's the help message for the `props` subcommand:
 $ clavin props --help
 Usage:
 
- Switches               Default  Desc                                                            
- --------               -------  ----                                                            
- -h, --no-help, --help  false    Show help.                                                      
- -f, --envs-file                 The file containing the environment definitions.                
- -t, --template-dir              The directory containing the templates.                         
- --host                          The Zookeeper host to connection to.                            
- --port                 2181     The Zookeeper client port to connection to.                     
- --acl                           The file containing Zookeeper hostname ACLs.                    
- -a, --app              de       The application the settings are for.                           
- -e, --env                       The environment that the options should be entered into.        
- -d, --deployment                The deployment inside the environment that is being configured. 
+ Switches               Default  Desc
+ --------               -------  ----
+ -h, --no-help, --help  false    Show help.
+ -f, --envs-file                 The file containing the environment definitions.
+ -t, --template-dir              The directory containing the templates.
+ --host                          The Zookeeper host to connection to.
+ --port                 2181     The Zookeeper client port to connection to.
+ --acl                           The file containing Zookeeper hostname ACLs.
+ -a, --app              de       The application the settings are for.
+ -e, --env                       The environment that the options should be entered into.
+ -d, --deployment                The deployment inside the environment that is being configured.
 ```
 
 Here's the help message for the `get-props` subcommand:
@@ -716,13 +716,13 @@ Here's the help message for the `get-props` subcommand:
 $ clavin get-props --help
 Usage:
 
- Switches               Default  Desc                                     
- --------               -------  ----                                     
- -h, --no-help, --help  false    Show help.                               
- --host                          The Zookeeper host to connect to.        
- --port                 2181     The Zookeeper port to connect to.        
- -s, --service                   The service to get the settings for.     
- --service-host                  The host that the service is running on. 
+ Switches               Default  Desc
+ --------               -------  ----
+ -h, --no-help, --help  false    Show help.
+ --host                          The Zookeeper host to connect to.
+ --port                 2181     The Zookeeper port to connect to.
+ -s, --service                   The service to get the settings for.
+ --service-host                  The host that the service is running on.
 ```
 
 Here's the help message for the `templates` subcommand:
@@ -731,11 +731,11 @@ Here's the help message for the `templates` subcommand:
 $ clavin templates --help
 Usage:
 
- Switches                       Default  Desc                                             
- --------                       -------  ----                                             
- -h, --no-help, --help          false    Show help.                                       
- -l, --no-list, --list          false    List templates.                                  
- -v, --no-validate, --validate  false    Validate templates.                              
- -t, --template-dir                      The directory containing the templates.          
- -f, --envs-file                         The file containing the environment definitions. 
+ Switches                       Default  Desc
+ --------                       -------  ----
+ -h, --no-help, --help          false    Show help.
+ -l, --no-list, --list          false    List templates.
+ -v, --no-validate, --validate  false    Validate templates.
+ -t, --template-dir                      The directory containing the templates.
+ -f, --envs-file                         The file containing the environment definitions.
 ```
