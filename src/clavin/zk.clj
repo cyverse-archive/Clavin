@@ -45,7 +45,6 @@
   [npath data]
   (let [data-version (:version (zk/exists zkcl npath))]
     (zk/set-data zkcl npath (.getBytes data) data-version)))
-
 (defn read-node
   "Reads the bytes from a node and returns them as a string."
   [npath]
@@ -95,6 +94,10 @@
         data    (.getBytes node-value "UTF-8")]
     (zk/set-data zkcl node-name data version)))
 
+(defn list-children
+  [node-name]
+  (zk/children zkcl node-name))
+
 (defn get-value
   [node-name]
   (when (exists? node-name)
@@ -130,3 +133,13 @@
   [node-path acls]
   (let [curr-acls (zk/get-acl zkcl node-path)]
     (set-acl node-path (concat (:acl curr-acls) acls))))
+
+(defn deployment
+  ([ip-address]
+     (->> (ft/path-join "/hosts" ip-address)
+          (list-children)
+          (filter #(not= % "admin"))
+          first))
+  ([]
+     (deployment (->> (java.net.InetAddress/getLocalHost)
+                      (.getHostAddress)))))

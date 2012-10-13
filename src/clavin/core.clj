@@ -4,6 +4,7 @@
   (:require [clojure.tools.cli :as cli]
             [clavin.environments :as env]
             [clavin.generator :as gen]
+            [clavin.get-props :as gp]
             [clavin.loader :as loader]
             [clavin.templates :as ct]
             [clavin.zk :as zk]
@@ -27,8 +28,8 @@
     :default nil]
    ["-t" "--template-dir" "The directory containing the templates."
     :default nil]
-   ["--host" "The Zookeeper host to connection to." :default nil]
-   ["--port" "The Zookeeper client port to connection to." :default 2181
+   ["--host" "The Zookeeper host to connect to." :default nil]
+   ["--port" "The Zookeeper client port to connect to." :default 2181
     :parse-fn to-integer]
    ["--acl"  "The file containing Zookeeper hostname ACLs." :default nil]
    ["-a" "--app" "The application the settings are for." :default "de"]
@@ -40,6 +41,21 @@
 
 (def ^:private required-args
   [:envs-file :template-dir :host :acl :deployment])
+
+(defn parse-get-props-args
+  "Parses the arguments for the 'get-props' subcommand."
+  [args]
+  (cli/cli
+   args
+   ["-h" "--help" "Show help." :default false :flag true]
+   ["--host" "The Zookeeper host to connect to." :default nil]
+   ["--port" "The Zookeeper port to connect to." :default 2181
+    :parse-fn to-integer]
+   ["-s" "--service" "The service to get the settings for." :default nil]
+   ["--service-host" "The host that the service is running on." :default nil]))
+
+(def ^:private required-get-props-args
+  [:host :service])
 
 (defn parse-files-args
   "Parses the arguments for the 'files' subcommand."
@@ -269,6 +285,48 @@
         (loader/load-settings app env-name dep template-dir templates acls env))
       (println "Done loading data into the" env-path "environment."))))
 
+(defn- get-service-host
+  "Obtains the IP address for the host that the service is running on."
+  [host]
+  (if (nil? host)
+    (java.net.InetAddress/getLocalHost)
+    (try
+      (java.net.InetAddress/getByName host)
+      (catch java.net.UnknownHostException e
+        (println "host" host "is unknown - please check for typos")
+        (System/exit 1)))))
+
+(defn- get-deployment
+  "Obtains the deployment for an IP address."
+  [host]
+  (let [host-ip    (.getHostAddress host)
+        deployment (zk/deployment host-ip)]
+    (when (nil? deployment)
+      (println "no deployment is defined for" host-ip)
+      (System/exit 1))
+    deployment))
+
+(defn- show-props
+  "Shows properties in columns."
+  [props]
+  (let [prop-name-width (apply max (map count (keys props)))
+        fmt             (str "%-" prop-name-width "s = %s\n")]
+    (dorun (map #(.printf System/out fmt (to-array %)) props))))
+
+(defn handle-get-props
+  "Performs tasks for the get-props subcommand."
+  [args-vec]
+  (let [[opts prop-names help-str] (parse-get-props-args args-vec)]
+    (validate-opts opts help-str required-get-props-args)
+    (zk/init (:host opts) (:port opts))
+    (zk/with-zk
+      (let [service      (:service opts)
+            service-host (get-service-host (:service-host opts))
+            deployment   (get-deployment service-host)]
+        (if (= (count prop-names) 1)
+          (println (gp/get-prop deployment service (first prop-names)))
+          (show-props (gp/get-props deployment service prop-names)))))))
+
 (defn handle-environments
   "Performs tasks for the envs subcommand."
   [args-vec]
@@ -305,6 +363,7 @@
   {"help"      (fn [args] (main-help args) (System/exit 0))
    "files"     handle-files
    "props"     handle-properties
+   "get-props" handle-get-props
    "hosts"     handle-hosts
    "envs"      handle-environments
    "templates" handle-templates})
