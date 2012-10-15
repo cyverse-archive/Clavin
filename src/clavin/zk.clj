@@ -4,19 +4,15 @@
             [zookeeper :as zk]
             [zookeeper.data :as data]))
 
-(def zk-host (atom ""))
-(def zk-port (atom ""))
-
 (def ^:dynamic zkcl nil)
 
-(defn init
+(defn build-connection-str
   [host port]
-  (reset! zk-host host)
-  (reset! zk-port port))
+  (str host ":" port))
 
 (defmacro with-zk
-  [& body]
-  `(let [cl# (zk/connect (str @zk-host ":" @zk-port))]
+  [connection-str & body]
+  `(let [cl# (zk/connect connection-str)]
      (binding [zkcl cl#]
        (try (do ~@body)
          (finally (zk/close zkcl))))))
@@ -82,14 +78,14 @@
     (loop [nodes all-nodes]
       (when-not (exists? (first nodes))
         (create (first nodes)))
-      (when (pos? (count (rest nodes))) 
+      (when (pos? (count (rest nodes)))
         (recur (rest nodes))))))
 
 (defn set-value
   [node-name node-value]
   (when-not (exists? node-name)
     (create node-name))
-  
+
   (let [version (:version (zk/exists zkcl node-name))
         data    (.getBytes node-value "UTF-8")]
     (zk/set-data zkcl node-name data version)))
