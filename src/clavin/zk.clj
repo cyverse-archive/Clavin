@@ -12,7 +12,7 @@
 
 (defmacro with-zk
   [connection-str & body]
-  `(let [cl# (zk/connect connection-str)]
+  `(let [cl# (zk/connect ~connection-str)]
      (binding [zkcl cl#]
        (try (do ~@body)
          (finally (zk/close zkcl))))))

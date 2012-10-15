@@ -12,6 +12,9 @@
             [clojure.string :as string]
             [clojure-commons.props :as ccprops]))
 
+(def ^:private default-zkhosts-path
+  "/etc/iplant-services/zkhosts.properties")
+
 (declare main-help)
 
 (defn- to-integer
@@ -31,6 +34,9 @@
    ["--host" "The Zookeeper host to connect to." :default nil]
    ["--port" "The Zookeeper client port to connect to." :default 2181
     :parse-fn to-integer]
+   ["-z" "--zkhosts-path"
+    "The path to the file containing the Zookeeper connection settings."
+    :default default-zkhosts-path]
    ["--acl"  "The file containing Zookeeper hostname ACLs." :default nil]
    ["-a" "--app" "The application the settings are for." :default "de"]
    ["-e" "--env" "The environment that the options should be entered into."
@@ -40,7 +46,7 @@
     :default nil]))
 
 (def ^:private required-args
-  [:envs-file :template-dir :host :acl :deployment])
+  [:envs-file :template-dir :acl :deployment])
 
 (defn parse-get-props-args
   "Parses the arguments for the 'get-props' subcommand."
@@ -51,11 +57,14 @@
    ["--host" "The Zookeeper host to connect to." :default nil]
    ["--port" "The Zookeeper port to connect to." :default 2181
     :parse-fn to-integer]
+   ["-z" "--zkhosts-path"
+    "The path to the file containing the Zookeeper connection settings."
+    :default default-zkhosts-path]
    ["-s" "--service" "The service to get the settings for." :default nil]
    ["--service-host" "The host that the service is running on." :default nil]))
 
 (def ^:private required-get-props-args
-  [:host :service])
+  [:service])
 
 (defn parse-files-args
   "Parses the arguments for the 'files' subcommand."
@@ -80,12 +89,18 @@
   "Parses the arguments for the 'hosts' subcommand."
   [args]
   (cli/cli
-    args
-    ["-h" "--help" "Show help." :default false :flag true]
-    ["--acl"  "The file containing Zookeeper hostname ACLs." :default nil]
-    ["--host" "The Zookeeper host to connection to." :default nil]
-    ["--port" "The Zookeeper client port to connection to." :default 2181
-     :parse-fn to-integer]))
+   args
+   ["-h" "--help" "Show help." :default false :flag true]
+   ["--acl"  "The file containing Zookeeper hostname ACLs." :default nil]
+   ["--host" "The Zookeeper host to connection to." :default nil]
+   ["--port" "The Zookeeper client port to connection to." :default 2181
+    :parse-fn to-integer]
+   ["-z" "--zkhosts-path"
+    "The path to the file containing the Zookeeper connection settings."
+    :default default-zkhosts-path]))
+
+(def ^:private required-hosts-args
+  [:acl])
 
 (defn parse-envs-args
   "Parses the arguments for the 'envs' subcommand."
@@ -188,40 +203,45 @@
                 :else           (validate-multiple-opts opts help-str %))
               required-opts)))
 
+(defn read-zkhosts
+  "Obtains the Zookeeper connection settings from zkhosts.properties."
+  [zkhosts-path]
+  (try
+    (let [zkhosts-props (ccprops/read-properties zkhosts-path)
+          zkhosts       (.getProperty zkhosts-props "zookeeper")]
+      (when (nil? zkhosts)
+        (throw
+         (Exception. (str "no zookeeper information found in " zkhosts-path))))
+      zkhosts)))
+
+(defn no-zk-info
+  [help-str]
+  (println "either --host or --zkhosts-path is required")
+  (println help-str)
+  (System/exit 1))
+
+(defn get-zk-connection-str
+  [{:keys [host port zkhosts-path]} help-str]
+  (cond
+   (not (nil? host))         (zk/build-connection-str host port)
+   (not (nil? zkhosts-path)) (read-zkhosts zkhosts-path)
+   :else                     (no-zk-info help-str)))
+
 (defn handle-hosts
   "Performs tasks for the hosts subcommand."
   [args-vec]
   (let [[opts args help-str] (parse-hosts-args args-vec)]
-    (when (:help opts)
-      (println help-str)
-      (System/exit 0))
+    (validate-opts opts help-str required-hosts-args)
+    (let [acl-file  (get-regular-file opts help-str :acl)
+          acl-props (ccprops/read-properties acl-file)
+          zk-conn   (get-zk-connection-str opts help-str)]
 
-    (cond
-      (not (:acl opts))
-      (do (println "--acl is required.")
-        (println help-str)
-        (System/exit 1))
-
-      (not (:host opts))
-      (do (println "--host is required.")
-        (println help-str)
-        (System/exit 1))
-
-      (not (ft/exists? (:acl opts)))
-      (do (println "--acl must reference an existing file.")
-        (println help-str)
-        (System/exit 1)))
-
-    (println (str "Connecting to Zookeeper instance at " (:host opts) ":" (:port opts)))
-
-    (let [acl-props (ccprops/read-properties (:acl opts))]
       (when-not (loader/can-run? acl-props)
         (println "This machine isn't listed as an admin machine in " (:acl opts))
         (System/exit 1))
 
       (println "Starting to load hosts.")
-      (-> (zk/build-connection-str (:host opts) (:port opts))
-          (loader/load-hosts acl-props))
+      (loader/load-hosts zk-conn acl-props)
       (println "Done loading hosts.")
       (System/exit 0))))
 
@@ -265,9 +285,8 @@
           env-name     (or (:env opts) (env/env-for-dep envs dep))
           app          (:app opts)
           env          (get-in envs (map keyword [env-name dep]))
-          host         (:host opts)
-          port         (:port opts)
-          env-path     (str app "." env-name "." dep)]
+          env-path     (str app "." env-name "." dep)
+          zk-conn      (get-zk-connection-str opts help-str)]
 
       (when (nil? env)
         (println "no environment defined for" env-path)
@@ -277,12 +296,10 @@
         (println "This machine isn't listed as an admin machine in " acl-file)
         (System/exit 1))
 
-      (println "Connecting to Zookeeper instance at" (str host ":" port))
       (println "Starting to load data into the" env-path "environment...")
       (let [acls (loader/load-acls app env-name dep acl-props)]
-        (-> (zk/build-connection-str host port)
-            (loader/load-settings app env-name dep template-dir templates acls
-                                  env)))
+        (loader/load-settings zk-conn app env-name dep template-dir templates
+                              acls env))
       (println "Done loading data into the" env-path "environment."))))
 
 (defn- get-service-host
@@ -318,7 +335,7 @@
   [args-vec]
   (let [[opts prop-names help-str] (parse-get-props-args args-vec)]
     (validate-opts opts help-str required-get-props-args)
-    (zk/with-zk (zk/build-connection-str (:host opts) (:port opts))
+    (zk/with-zk (get-zk-connection-str opts help-str)
       (let [service      (:service opts)
             service-host (get-service-host (:service-host opts))
             deployment   (get-deployment service-host)]
