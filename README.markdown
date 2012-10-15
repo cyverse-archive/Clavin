@@ -58,6 +58,51 @@ clavin hosts -h
 clavin props -h
 ```
 
+Specifying Zookeeper Connection Settings
+----------------------------------------
+
+Zookeeper connection settings can be specified in one of two ways: either by
+specifying the host and port directly on the command line or by reading the file
+that the services use to obtain the connection settings, `zkhosts.properties`.
+In the former case, the options to use are `--host` and `--port`.  The `--port`
+setting defaults to `2181` if it's not specified.  The `--host` option defaults
+to nil, meaning that Clavin will look for `zkhosts.properties`.  For a concrete
+example, suppose you wanted to list the properties for the service, `foo`, on
+the Zookeeper process running on the local host and listening on the standard
+port.  The following command could be used for that:
+
+```
+$ clavin get-props --host localhost -s foo
+```
+
+Now suppose that Zookeeper is listening on port 2001 instead.  In that case, the
+equivalent command would look something like this:
+
+```
+$ clavin get-props --host localhost --port 2001 -s foo
+```
+
+If you have a copy of `zkhosts.properties` in a specific location on the local
+machine then you can tell Clavin to obtain the connection settings from that
+file using the `-z` or `--zkhosts-path` command-line option.  If you wanted to
+use the copy of `zkhosts.properties` in your home directory, for example, then
+the equivalent command from the example above would be something like this:
+
+```
+$ clavin get-props -z ~/zkhosts.properties -s foo
+```
+
+Finally, if your copy of zkhosts.properties is located in the default location
+(`/etc/iplant-services/zkhosts.properties`), then you can leave the connection
+settings off of the command line completely:
+
+```
+$ clavin get-props -s foo
+```
+
+Note that these options apply to all sub-commands that interact with Zookeeper,
+but the examples below will all specify `--host` directly.
+
 Creating an ACLs file
 ---------------------
 
@@ -93,7 +138,6 @@ The values associated with each key in the ACLs file are comma separated lists
 of IP addresses.
 
 
-
 High level guidelines for organizing ACL files
 ----------------------------------------------
 
@@ -116,9 +160,9 @@ the following command:
 clavin hosts --host 127.0.0.1 --acl <path-to-acls-file>
 ```
 
---host tells clavin which Zookeeper node to run against. That will create
-entries in /hosts on Zookeeper for each machine and tell what deployments
-it's associated with (deployments are analogous to groups in this case).
+That will create entries in /hosts on Zookeeper for each machine and tell what
+deployments it's associated with (deployments are analogous to groups in this
+case).
 
 For instance, since 192.168.1.5 is listed both as an admin machine and as a
 machine in the "app.dev.dep-2" deployment, Zookeeper will create the following
@@ -570,13 +614,6 @@ can be specified using the --service-host command-line option.  If the
 --service-host option is not specified then the IP address of the local host
 will be used.
 
-As with other subcommands, the Zookeeper host and port are specified using the
---host and --port options, respectively.  The --host argument is required for
-this subcommand.  The --port argument is optional, and defaults to the standard
-Zookeeper port, 2181, if it's not provided.  The only other required argument
-for this subcommand is the -s or --service argument, which is used to specify
-the service name.
-
 As with all subcommands, the -h or --help option can be used to display a brief
 usage message.  This usage message contains brief descriptions of all of the
 command-line options.
@@ -683,12 +720,13 @@ Here's the help message for the `hosts` subcommand:
 $ clavin hosts --help
 Usage:
 
- Switches               Default  Desc
- --------               -------  ----
- -h, --no-help, --help  false    Show help.
- --acl                           The file containing Zookeeper hostname ACLs.
- --host                          The Zookeeper host to connection to.
- --port                 2181     The Zookeeper client port to connection to.
+ Switches               Default                                  Desc
+ --------               -------                                  ----
+ -h, --no-help, --help  false                                    Show help.
+ --acl                                                           The file containing Zookeeper hostname ACLs.
+ --host                                                          The Zookeeper host to connection to.
+ --port                 2181                                     The Zookeeper client port to connection to.
+ -z, --zkhosts-path     /etc/iplant-services/zkhosts.properties  The path to the file containing the Zookeeper connection settings.
 ```
 
 Here's the help message for the `props` subcommand:
@@ -697,17 +735,18 @@ Here's the help message for the `props` subcommand:
 $ clavin props --help
 Usage:
 
- Switches               Default  Desc
- --------               -------  ----
- -h, --no-help, --help  false    Show help.
- -f, --envs-file                 The file containing the environment definitions.
- -t, --template-dir              The directory containing the templates.
- --host                          The Zookeeper host to connection to.
- --port                 2181     The Zookeeper client port to connection to.
- --acl                           The file containing Zookeeper hostname ACLs.
- -a, --app              de       The application the settings are for.
- -e, --env                       The environment that the options should be entered into.
- -d, --deployment                The deployment inside the environment that is being configured.
+ Switches               Default                                  Desc
+ --------               -------                                  ----
+ -h, --no-help, --help  false                                    Show help.
+ -f, --envs-file                                                 The file containing the environment definitions.
+ -t, --template-dir                                              The directory containing the templates.
+ --host                                                          The Zookeeper host to connect to.
+ --port                 2181                                     The Zookeeper client port to connect to.
+ -z, --zkhosts-path     /etc/iplant-services/zkhosts.properties  The path to the file containing the Zookeeper connection settings.
+ --acl                                                           The file containing Zookeeper hostname ACLs.
+ -a, --app              de                                       The application the settings are for.
+ -e, --env                                                       The environment that the options should be entered into.
+ -d, --deployment                                                The deployment inside the environment that is being configured.
 ```
 
 Here's the help message for the `get-props` subcommand:
@@ -716,13 +755,14 @@ Here's the help message for the `get-props` subcommand:
 $ clavin get-props --help
 Usage:
 
- Switches               Default  Desc
- --------               -------  ----
- -h, --no-help, --help  false    Show help.
- --host                          The Zookeeper host to connect to.
- --port                 2181     The Zookeeper port to connect to.
- -s, --service                   The service to get the settings for.
- --service-host                  The host that the service is running on.
+ Switches               Default                                  Desc
+ --------               -------                                  ----
+ -h, --no-help, --help  false                                    Show help.
+ --host                                                          The Zookeeper host to connect to.
+ --port                 2181                                     The Zookeeper port to connect to.
+ -z, --zkhosts-path     /etc/iplant-services/zkhosts.properties  The path to the file containing the Zookeeper connection settings.
+ -s, --service                                                   The service to get the settings for.
+ --service-host                                                  The host that the service is running on.
 ```
 
 Here's the help message for the `templates` subcommand:
