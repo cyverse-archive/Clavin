@@ -65,7 +65,7 @@ Zookeeper connection settings can be specified in one of two ways: either by
 specifying the host and port directly on the command line or by reading the file
 that the services use to obtain the connection settings, `zkhosts.properties`.
 In the former case, the options to use are `--host` and `--port`.  The `--port`
-setting defaults to `2181` if it's not specified.  The `--host` option defaults
+setting defaults to `31381` if it's not specified.  The `--host` option defaults
 to nil, meaning that Clavin will look for `zkhosts.properties`.  For a concrete
 example, suppose you wanted to list the properties for the service, `foo`, on
 the Zookeeper process running on the local host and listening on the standard
@@ -169,7 +169,7 @@ machine in the "app.dev.dep-2" deployment, Zookeeper will create the following
 nodes for it:
 
 ```
-[zk: localhost:2181(CONNECTED) 2] ls /hosts/192.168.1.5
+[zk: localhost:31381(CONNECTED) 2] ls /hosts/192.168.1.5
 
 [app.dev.dep-2, admin]
 ```
@@ -180,7 +180,7 @@ follows:
 
 
 ```
-[zk: localhost:2181(CONNECTED) 4] getAcl /hosts/192.168.1.5/admin
+[zk: localhost:31381(CONNECTED) 4] getAcl /hosts/192.168.1.5/admin
 
 'ip,'192.168.1.5
 
@@ -725,7 +725,7 @@ Usage:
  -h, --no-help, --help  false                                    Show help.
  --acl                                                           The file containing Zookeeper hostname ACLs.
  --host                                                          The Zookeeper host to connection to.
- --port                 2181                                     The Zookeeper client port to connection to.
+ --port                 31381                                    The Zookeeper client port to connection to.
  -z, --zkhosts-path     /etc/iplant-services/zkhosts.properties  The path to the file containing the Zookeeper connection settings.
 ```
 
@@ -741,7 +741,7 @@ Usage:
  -f, --envs-file                                                 The file containing the environment definitions.
  -t, --template-dir                                              The directory containing the templates.
  --host                                                          The Zookeeper host to connect to.
- --port                 2181                                     The Zookeeper client port to connect to.
+ --port                 31381                                    The Zookeeper client port to connect to.
  -z, --zkhosts-path     /etc/iplant-services/zkhosts.properties  The path to the file containing the Zookeeper connection settings.
  --acl                                                           The file containing Zookeeper hostname ACLs.
  -a, --app              de                                       The application the settings are for.
@@ -759,7 +759,7 @@ Usage:
  --------               -------                                  ----
  -h, --no-help, --help  false                                    Show help.
  --host                                                          The Zookeeper host to connect to.
- --port                 2181                                     The Zookeeper port to connect to.
+ --port                 31381                                    The Zookeeper port to connect to.
  -z, --zkhosts-path     /etc/iplant-services/zkhosts.properties  The path to the file containing the Zookeeper connection settings.
  -s, --service                                                   The service to get the settings for.
  --service-host                                                  The host that the service is running on.

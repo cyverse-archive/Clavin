@@ -32,7 +32,7 @@
    ["-t" "--template-dir" "The directory containing the templates."
     :default nil]
    ["--host" "The Zookeeper host to connect to." :default nil]
-   ["--port" "The Zookeeper client port to connect to." :default 2181
+   ["--port" "The Zookeeper client port to connect to." :default 31381
     :parse-fn to-integer]
    ["-z" "--zkhosts-path"
     "The path to the file containing the Zookeeper connection settings."
@@ -55,7 +55,7 @@
    args
    ["-h" "--help" "Show help." :default false :flag true]
    ["--host" "The Zookeeper host to connect to." :default nil]
-   ["--port" "The Zookeeper port to connect to." :default 2181
+   ["--port" "The Zookeeper port to connect to." :default 31381
     :parse-fn to-integer]
    ["-z" "--zkhosts-path"
     "The path to the file containing the Zookeeper connection settings."
@@ -93,7 +93,7 @@
    ["-h" "--help" "Show help." :default false :flag true]
    ["--acl"  "The file containing Zookeeper hostname ACLs." :default nil]
    ["--host" "The Zookeeper host to connection to." :default nil]
-   ["--port" "The Zookeeper client port to connection to." :default 2181
+   ["--port" "The Zookeeper client port to connection to." :default 31381
     :parse-fn to-integer]
    ["-z" "--zkhosts-path"
     "The path to the file containing the Zookeeper connection settings."
