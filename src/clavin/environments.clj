@@ -32,7 +32,7 @@
    within that environment."
   [env]
   (let [get-param (comp keyword second)]
-    (set (mapcat (fn [[_ v]] (map get-param (re-seq placeholder-re v))) env))))
+    (set (mapcat (fn [[_ v]] (map get-param (re-seq placeholder-re (str v)))) env))))
 
 (defn- keyset
   "Obtains a set containing the keys of a map."

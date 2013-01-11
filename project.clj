@@ -1,4 +1,4 @@
-(defproject clavin "1.2.0-SNAPSHOT"
+(defproject clavin "1.2.1-SNAPSHOT"
   :description "A command-line tool for loading service configurations into Zookeeper."
   :dependencies [[org.antlr/stringtemplate "4.0.2"]
                  [org.clojure/clojure "1.4.0"]
