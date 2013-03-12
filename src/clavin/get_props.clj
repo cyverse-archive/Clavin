@@ -26,7 +26,7 @@
 
    Returns the property value or nil if the property isn't defined."
   [deployment service prop-name]
-  (zk/get-value (dep-path deployment service prop-name)))
+  (or (zk/get-value (dep-path deployment service prop-name)) ""))
 
 (defn- get-prop-names
   "Gets the list of property names to display for get-props.  If property
@@ -50,5 +50,5 @@
   [deployment service prop-names]
   (let [base-path  (dep-path deployment service)]
     (->> (get-prop-names base-path prop-names)
-         (map #(vector % (zk/get-value (zk-path base-path %))))
+         (map #(vector % (or (zk/get-value (zk-path base-path %)) "")))
          (into (sorted-map)))))
