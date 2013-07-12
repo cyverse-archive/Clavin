@@ -378,26 +378,23 @@ settings.  This file is just a plain Clojure source file containing a single
 nested map definition:
 
 ```clojure
-{:env-1
- {:dep-1
-  {:first-setting  "foo"
-   :second-setting "bar"}
-  :dep-2
-  {:first-setting  "baz"
-   :second-setting "quux"}}
- :env-2
- {:dep-3
-  {:first-setting  "ni"
-   :second-setting "ecky"}}}
+{:first-setting
+ {[:env-1 :dep-1] "foo"
+  [:env-1 :dep-2] "bar"
+  [:env-2 :dep-3] "baz"}
+ :second-setting
+ {[:env-1 :dep-1] "quux"
+  [:env-1 :dep-2] "ni"
+  [:env-2 :dep-3] "ecky"}}
 ```
 
-Note that the keys at the first level correspond to the environment (from the
-`-e` or `--env` command-line option) and that the keys at the second level
-correspond to the deployment (from the `-d` or `--deployment` command-line
-option).  The app (from the `-a` or `--app` command-line option) is not
+Note that the keys of the nested maps are vectors containing keywords which
+correspond to the environment (from the `-e` or `--env` command-line option) and
+the deployment (from the `-d` or `--deployment` command-line option),
+respectively.  The app (from the `-a` or `--app` command-line option) is not
 currently used in this file.
 
-The keywords in the map below the deployment level correspond directly to the
+The keywords at the first level of the map correspond directly to the
 placeholder names.  When clavin defines the values that will be used by the
 template, it uses the keyword name with hyphens replaced with underscores as
 the placeholder name.  For example, the `:first-setting` keyword mentioned
@@ -415,7 +412,7 @@ generated from these settings, the resulting file would look like this:
 
 ```
 some.service.first  = foo
-some.service.second = bar
+some.service.second = quux
 ```
 
 In some cases, it's convenient to be able to generate deployment-specific
@@ -426,10 +423,10 @@ connecting to this service.  For this purpose, Clavin supports placeholders
 inside of property values:
 
 ```clojure
-{:env-1
- {:dep-1
-  {:foo-port "8888"
-   :foo-base "http://somehost.example.org:${foo-port}/bar"}}}
+{:foo-port
+ {[:env-1 :dep-1] "8888"}
+ :foo-base
+ {[:env-1 :dep-1] "http://somehost.example.org:${foo-port}/bar"}}
 ```
 
 Note that the placeholder format is a little different in this file than it is
@@ -442,16 +439,17 @@ also contains a substitution string.  Take this (admittedly contrived)
 environments file, for example:
 
 ```clojure
-{:env-1
- {:dep-1
-  {:foo-port "8888"
-   :foo-host "somehost.example.org:${foo-port}"
-   :foo-base "http://${foo-host}"}}}
+{:foo-port
+ {[:env-1 :dep-1] "8888"}
+ :foo-host
+ {[:env-1 :dep-1] "somehost.example.org:${foo-port}"}
+ :foo-base
+ {[:env-1 :dep-1] "http://${foo-host}"}}
 ```
 
 In this case, the value for the setting, `foo-base`, contains a reference to
 the setting, `foo-host`, which contains a reference to the setting,
-`foo-port`.  There's no practical limit to the number of of settings in the
+`foo-port`.  There's no practical limit to the number of settings in the
 chain, but the chains should be kept as short as possible.  An extremely long
 chain (or a recursive chain) will cause a stack overflow error in Clavin.
 Checks for recursive chains can be added sometime in the future if this begins
