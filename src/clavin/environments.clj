@@ -94,6 +94,14 @@
       (println filename "is valid.")
       (show-configs-invalid-msg configs filename))))
 
+(defn env-configs
+  "Gets a map of properties where keys are from envs and the values are
+   extracted from the sub-map values in envs using the given env-name and
+   deployment."
+  [configs env-name deployment]
+  (let [env-key (map keyword [env-name deployment])]
+    (into {} (for [[k v] configs] [k (v env-key)]))))
+
 (defn- env-names
   "Obtains the list of environment names from the configs map."
   [envs]
@@ -116,8 +124,9 @@
 
 (defn env-for-dep
   "Determines the name of the environment associated with a deployment name."
-  [envs dep]
-  (let [names (map first (filter #(= dep (second %)) (env-names envs)))]
+  [configs dep]
+  (let [envs (extract-envs configs)
+        names (map first (filter #(= dep (second %)) (env-names envs)))]
     (when (empty? names)
       (throw (Exception. (str "no environment found for deployment " dep))))
     (when (> (count names) 1)

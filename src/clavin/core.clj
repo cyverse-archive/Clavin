@@ -257,7 +257,7 @@
           dep          (:deployment opts)
           env-name     (or (:env opts) (env/env-for-dep envs dep))
           app          (:app opts)
-          env          (get-in envs (map keyword [env-name dep]))
+          env          (env/env-configs envs env-name dep)
           env-path     (str app "." env-name "." dep)
           dest         (:dest opts)]
 
@@ -284,7 +284,7 @@
           dep          (:deployment opts)
           env-name     (or (:env opts) (env/env-for-dep envs dep))
           app          (:app opts)
-          env          (get-in envs (map keyword [env-name dep]))
+          env          (env/env-configs envs env-name dep)
           env-path     (str app "." env-name "." dep)
           zk-conn      (get-zk-connection-str opts help-str)]
 
