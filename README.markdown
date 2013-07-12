@@ -473,15 +473,17 @@ Here's an example of an invalid file check:
 $ clavin envs -v -f environments.clj
 environments.clj is not valid.
 
-Please check the following properties:
-	:admib-groups
-	:admin-groups
-	:cas-base
-	:case-base
+Please check the following properties for the following environments:
+ :first-setting
+ :second-setting
+    [:dev :env-1]
+    [:deb :env-1]
+    [:dev :env-2]
+    [:dev :enb-2]
 ```
 
-In this case, it appears that some of the property names were mistyped in one
-or more environments.
+In this case, it appears that some of the environment names were mistyped in one
+or more properties.
 
 Listing Environments in an Environments File
 --------------------------------------------

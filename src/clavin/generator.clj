@@ -1,7 +1,7 @@
 (ns clavin.generator
   (:use [clojure.java.io :only [file]]
         [clavin.environments
-         :only [load-envs envs-valid? replace-placeholders]]
+         :only [load-envs replace-placeholders]]
         [clavin.templates :only [gen-file]])
   (:require [clojure.string :as string])
   (:import [java.io FilenameFilter StringReader]

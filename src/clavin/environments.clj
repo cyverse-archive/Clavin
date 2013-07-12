@@ -40,38 +40,59 @@
   (set (keys m)))
 
 (defn- envs-list
-  "Grabs the property mapping objects from the environment listings."
-  [envs]
-  (mapcat vals (vals envs)))
+  "Grabs the environment mapping objects from the configs."
+  [configs]
+  (map keyset (vals configs)))
 
-(defn envs-valid?
-  "Verifies that all of the environments have the same set of properties
+(defn- extract-envs
+  "Extracts a set of all environment mapping objects found in all properties."
+  [configs]
+  (apply union (envs-list configs)))
+
+(defn- envs-valid?
+  "Verifies that all of the properties have the same set of environments
    defined."
-  [envs]
-  (apply = (map keyset (envs-list envs))))
+  [configs]
+  (apply = (envs-list configs)))
+
+(defn- add-incomplete-prop
+  "Adds prop to the list of incomplete-props if its environments don't match
+   those given in all-envs."
+  [incomplete-props prop configs all-envs]
+  (if (seq (difference all-envs (keyset (prop configs))))
+    (conj incomplete-props prop)
+    incomplete-props))
 
 (defn- invalid-keys
-  "Determines which keys are invalid (that is, not defined in all environments)
-   in the defined environments."
-  [envs]
-  (let [env-keys (map keyset (envs-list envs))]
-    (difference (apply union env-keys) (apply intersection env-keys))))
+  "Determines which properties are invalid (that is, not defined with all
+   environments) in the given configs."
+  [configs]
+  (let [props (keys configs)
+        all-envs (extract-envs configs)]
+    (reduce #(add-incomplete-prop %1 %2 configs all-envs) [] props)))
 
-(defn show-envs-invalid-msg
-  "Prints a message indicating that an environment file is not valid."
-  [envs filename]
+(defn- missing-envs
+  "Determines which environments are missing from any of the defined properties."
+  [configs]
+  (let [env-keys (envs-list configs)]
+    (difference (extract-envs configs) (apply intersection env-keys))))
+
+(defn show-configs-invalid-msg
+  "Prints a message indicating that a configs file is not valid."
+  [configs filename]
   (println filename "is not valid.")
   (println)
-  (println "Please check the following properties:")
-  (dorun (map #(println (str "\t" %)) (sort (invalid-keys envs)))))
+  (println "Please check the following properties for the following environments:")
+  (dorun (map #(println (str " " %)) (sort (invalid-keys configs))))
+  (dorun (map #(println (str "\t" %)) (sort (missing-envs configs)))))
 
 (defn validate-envs
-  "Ensures that the environments all have the same set of keys defined."
+  "Ensures that all properties have the same set of environments defined."
   [filename]
-  (let [envs (load-envs filename)]
-    (if (envs-valid? envs)
+  (let [configs (load-envs filename)]
+    (if (envs-valid? configs)
       (println filename "is valid.")
-      (show-envs-invalid-msg envs filename))))
+      (show-configs-invalid-msg configs filename))))
 
 (defn- env-names
   "Obtains the list of environment names from the environments map."
