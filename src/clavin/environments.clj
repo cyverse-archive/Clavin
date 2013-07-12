@@ -95,15 +95,16 @@
       (show-configs-invalid-msg configs filename))))
 
 (defn- env-names
-  "Obtains the list of environment names from the environments map."
+  "Obtains the list of environment names from the configs map."
   [envs]
-  (mapcat (fn [[k v]] (map #(map name [k (key %)]) v)) envs))
+  (map #(map name %) envs))
 
 (defn list-envs
   "Lists all of the environments defined in an environment file."
   [filename]
   (let [hdrs  ["environment" "deployment"]
-        envs  (load-envs filename)
+        cfgs  (load-envs filename)
+        envs  (first (envs-list cfgs))
         names (env-names envs)
         width (apply max (map count (apply concat (conj names hdrs))))
         sep   (apply str (take width (repeat "-")))
