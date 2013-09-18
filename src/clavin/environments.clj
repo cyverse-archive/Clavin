@@ -124,8 +124,7 @@
 (defn env-for-dep
   "Determines the name of the environment associated with a deployment name."
   [configs dep]
-  (let [envs (extract-envs configs)
-        names (map first (filter #(= dep (second %)) (env-names envs)))]
+  (let [names (map first (filter #(= dep (second %)) (env-names configs)))]
     (when (empty? names)
       (throw (Exception. (str "no environment found for deployment " dep))))
     (when (> (count names) 1)
