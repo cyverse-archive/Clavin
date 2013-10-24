@@ -289,6 +289,10 @@ nibblonian.swank.enabled =
 nibblonian.swank.port =
 ```
 
+If the name of the template has a file extension prior to the `.st` , eg. `name.ext.st`, the name
+of the generated configuration file will be just the template name, eg. `name.ext`. Otherwise, the
+name of the generated file will be the template name with `.properties` extension added. 
+
 Listing and Validating Configuration File Templates
 ---------------------------------------------------
 

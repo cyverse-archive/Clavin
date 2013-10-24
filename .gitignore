@@ -7,5 +7,6 @@ bin
 .classpath
 .project
 .lein*
+.settings
 \#*\#
 /target/

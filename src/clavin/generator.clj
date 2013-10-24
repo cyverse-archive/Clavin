@@ -8,10 +8,19 @@
            [java.util Properties]
            [org.stringtemplate.v4 ST]))
 
+(defn- name-file
+  "Creates the name of the configuration file. If the template name has a dot extension, the
+   template name will be used as the file name. Otherwise, the file name will be the template name
+   extended with '.properties'."
+  [template-name]
+  (if (.contains template-name ".") 
+     template-name
+     (str template-name ".properties")))
+
 (defn- write-file
   "Creates a properties file for a template and environment."
   [env template-dir template-name dest-dir]
-  (let [dest-file (file dest-dir (str template-name ".properties"))]
+  (let [dest-file (file dest-dir (name-file template-name))]
     (print "Writing" (.getPath dest-file) "...")
     (spit dest-file (gen-file env template-dir template-name))
     (println "done.")))
