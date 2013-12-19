@@ -5,7 +5,8 @@
                  [org.clojure/tools.cli "0.2.1"]
                  [org.iplantc/clojure-commons "1.4.1-SNAPSHOT"]
                  [zookeeper-clj "0.9.1"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "1.4.1-SNAPSHOT"]]
+  :plugins [[org.iplantc/lein-iplant-cmdtar "0.1.2-SNAPSHOT"]
+            [org.iplantc/lein-iplant-rpm "1.4.1-SNAPSHOT"]]
   :iplant-rpm {:summary "Clavin"
                :type :command
                :provides "iplant-clavin"}
