@@ -13,8 +13,8 @@
    template name will be used as the file name. Otherwise, the file name will be the template name
    extended with '.properties'."
   [template-name]
-  (if (.contains template-name ".") 
-     template-name
+  (if (.contains template-name ".")
+     (string/replace template-name #"[.]\z" "")
      (str template-name ".properties")))
 
 (defn- write-file
