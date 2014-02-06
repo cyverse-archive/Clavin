@@ -6,6 +6,9 @@
   :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/Clavin.git"
         :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/Clavin.git"
         :url "git@github.com:iPlantCollaborativeOpenSource/Clavin.git"}
+  :pom-addition [:developers
+                 [:developer
+                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :dependencies [[org.antlr/stringtemplate "4.0.2"]
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.cli "0.2.1"]
